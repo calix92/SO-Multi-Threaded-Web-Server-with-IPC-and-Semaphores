@@ -1,4 +1,4 @@
-// master.c
+// src/master.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,13 +16,13 @@
 volatile sig_atomic_t keep_running = 1;
 
 void signal_handler(int signum) {
+    (void)signum;
     keep_running = 0;
 }
 
 int create_server_socket(int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
-        return -1;
+    if (sockfd < 0) return -1;
 
     int opt = 1;
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -41,27 +41,22 @@ int create_server_socket(int port) {
         close(sockfd);
         return -1;
     }
-
     return sockfd;
 }
 
+// Esta função deixa de ser usada nesta estratégia, mas pode ficar aqui
 void enqueue_connection(shared_data_t* data, semaphores_t* sems, int client_fd) {
-
     sem_wait(sems->empty_slots);
     sem_wait(sems->queue_mutex);
-
     data->queue.sockets[data->queue.rear] = client_fd;
     data->queue.rear = (data->queue.rear + 1) % MAX_QUEUE_SIZE;
     data->queue.count++;
-
     sem_post(sems->queue_mutex);
     sem_post(sems->filled_slots);
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-
 void master_run(server_config_t *config) {
-    // 1. Configurar tratamento de sinais (para fechar com Ctrl+C)
+    // 1. Configurar sinais
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
@@ -79,7 +74,7 @@ void master_run(server_config_t *config) {
     semaphores_t sems;
     if (init_semaphores(&sems, config->max_queue_size) != 0) {
         perror("Master: Erro ao iniciar semaforos");
-        destroy_shared_memory(shm); // Limpar antes de sair
+        destroy_shared_memory(shm);
         exit(EXIT_FAILURE);
     }
 
@@ -92,7 +87,7 @@ void master_run(server_config_t *config) {
         exit(EXIT_FAILURE);
     }
 
-    // 5. Criar Worker Processes (Fork)
+    // 5. Fork Workers
     pid_t pids[config->num_workers];
     
     for (int i = 0; i < config->num_workers; i++) {
@@ -100,49 +95,31 @@ void master_run(server_config_t *config) {
         
         if (pids[i] < 0) {
             perror("Master: Erro no fork");
-            // Nota: Num cenário real, deveríamos matar os filhos já criados aqui
             continue;
         }
         
         if (pids[i] == 0) {
             // === PROCESSO FILHO (WORKER) ===
-            // O filho herda os descritores, mas deve fechar o socket de escuta
-            // pois só precisa de lidar com clientes que lhe chegam via queue
-            close(server_socket); 
-            
-            worker_main(i); // Entra na lógica do worker e nunca retorna
+            // Passamos o server_socket para o filho!
+            worker_main(i, server_socket); 
             exit(0);
         }
     }
 
-    printf("Master: Todos os workers iniciados. A aguardar conexões...\n");
+    printf("Master: Todos os workers iniciados. A aguardar sinais (Master inativo no IO)...\n");
 
-    // 6. Loop Principal do Master (Produtor)
+    // 6. Loop Principal do Master (Apenas espera para morrer)
     while (keep_running) {
-        struct sockaddr_in client_addr;
-        socklen_t addr_len = sizeof(client_addr);
-        
-        // Aceita nova conexão (Bloqueante)
-        int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
-        
-        if (client_fd < 0) {
-            if (keep_running) perror("Master: Erro no accept");
-            continue;
-        }
-
-        // Coloca o socket na fila partilhada (seguro com semáforos)
-        enqueue_connection(shm, &sems, client_fd);
+        sleep(1);
     }
 
-    // 7. Limpeza (Shutdown Graceful)
+    // 7. Cleanup
     printf("\nMaster: A encerrar servidor...\n");
     
-    // Matar workers
     for (int i = 0; i < config->num_workers; i++) {
-        kill(pids[i], SIGTERM);
+        if (pids[i] > 0) kill(pids[i], SIGTERM);
     }
     
-    // Esperar que morram (evitar zombies)
     for (int i = 0; i < config->num_workers; i++) {
         wait(NULL);
     }
@@ -150,5 +127,5 @@ void master_run(server_config_t *config) {
     close(server_socket);
     destroy_semaphores(&sems);
     destroy_shared_memory(shm);
-    printf("Master: Limpeza concluída. Adeus!\n");
+    printf("Master: Limpeza concluída.\n");
 }

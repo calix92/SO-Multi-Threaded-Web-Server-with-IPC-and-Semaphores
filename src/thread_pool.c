@@ -1,14 +1,13 @@
+// src/thread_pool.c
 #include "thread_pool.h"
-#include "http.h"      // Para processar o pedido
+#include "http.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <string.h>      // Para strlen()
-#include <sys/socket.h>  // Para recv()
+#include <string.h>      // FIX: strlen
+#include <sys/socket.h>  // FIX: recv
 
-// Função auxiliar para lidar com o cliente na thread
 void handle_client(int client_fd) {
-    // Buffer para leitura (4KB é tipico)
     char buffer[4096];
     ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     
@@ -17,9 +16,8 @@ void handle_client(int client_fd) {
         
         http_request_t req;
         if (parse_http_request(buffer, &req) == 0) {
-            // Por agora, respondemos com um Hello World simples para testar
-            // Mais tarde ligamos isto ao cache.c e ficheiros reais
-            const char* body = "<h1>Funciona! Ola da Thread.</h1>";
+            // Resposta temporária de sucesso
+            const char* body = "<html><body><h1>Funciona! Ola da Thread.</h1></body></html>";
             send_http_response(client_fd, 200, "OK", "text/html", body, strlen(body));
         } else {
             send_http_response(client_fd, 400, "Bad Request", "text/html", NULL, 0);
@@ -34,7 +32,6 @@ void* worker_thread(void* arg) {
     while (1) {
         pthread_mutex_lock(&pool->mutex);
 
-        // Esperar enquanto a fila está vazia e não há shutdown
         while (pool->head == NULL && !pool->shutdown) {
             pthread_cond_wait(&pool->cond, &pool->mutex);
         }
@@ -44,7 +41,6 @@ void* worker_thread(void* arg) {
             break;
         }
 
-        // Retirar tarefa da fila (FIFO)
         task_t* task = pool->head;
         if (task) {
             pool->head = task->next;
@@ -79,7 +75,7 @@ void thread_pool_dispatch(thread_pool_t* pool, int client_fd) {
     }
     pool->tail = new_task;
 
-    pthread_cond_signal(&pool->cond); // Acorda uma thread
+    pthread_cond_signal(&pool->cond);
     pthread_mutex_unlock(&pool->mutex);
 }
 
