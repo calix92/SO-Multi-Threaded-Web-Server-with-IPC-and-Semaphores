@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h> // para send()
+#include <sys/socket.h>
 
 // =========================
 // 6. HTTP Request Parser

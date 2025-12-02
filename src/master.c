@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
+#include <sys/types.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include "master.h"
@@ -68,4 +70,99 @@ void master_run(server_config_t *config) {
     // - accept loop
     
     printf("Master: TODO - implementar master_run()\n");
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+void master_run(server_config_t *config) {
+    // 1. Configurar tratamento de sinais (para fechar com Ctrl+C)
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+    printf("Master: A iniciar servidor na porta %d com %d workers...\n", 
+           config->port, config->num_workers);
+
+    // 2. Criar Memória Partilhada
+    shared_data_t* shm = create_shared_memory();
+    if (!shm) {
+        perror("Master: Erro ao criar memoria partilhada");
+        exit(EXIT_FAILURE);
+    }
+
+    // 3. Inicializar Semáforos
+    semaphores_t sems;
+    if (init_semaphores(&sems, config->max_queue_size) != 0) {
+        perror("Master: Erro ao iniciar semaforos");
+        destroy_shared_memory(shm); // Limpar antes de sair
+        exit(EXIT_FAILURE);
+    }
+
+    // 4. Criar Socket do Servidor
+    int server_socket = create_server_socket(config->port);
+    if (server_socket < 0) {
+        perror("Master: Erro ao criar socket");
+        destroy_semaphores(&sems);
+        destroy_shared_memory(shm);
+        exit(EXIT_FAILURE);
+    }
+
+    // 5. Criar Worker Processes (Fork)
+    pid_t pids[config->num_workers];
+    
+    for (int i = 0; i < config->num_workers; i++) {
+        pids[i] = fork();
+        
+        if (pids[i] < 0) {
+            perror("Master: Erro no fork");
+            // Nota: Num cenário real, deveríamos matar os filhos já criados aqui
+            continue;
+        }
+        
+        if (pids[i] == 0) {
+            // === PROCESSO FILHO (WORKER) ===
+            // O filho herda os descritores, mas deve fechar o socket de escuta
+            // pois só precisa de lidar com clientes que lhe chegam via queue
+            close(server_socket); 
+            
+            worker_main(i); // Entra na lógica do worker e nunca retorna
+            exit(0);
+        }
+    }
+
+    printf("Master: Todos os workers iniciados. A aguardar conexões...\n");
+
+    // 6. Loop Principal do Master (Produtor)
+    while (keep_running) {
+        struct sockaddr_in client_addr;
+        socklen_t addr_len = sizeof(client_addr);
+        
+        // Aceita nova conexão (Bloqueante)
+        int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
+        
+        if (client_fd < 0) {
+            if (keep_running) perror("Master: Erro no accept");
+            continue;
+        }
+
+        // Coloca o socket na fila partilhada (seguro com semáforos)
+        enqueue_connection(shm, &sems, client_fd);
+    }
+
+    // 7. Limpeza (Shutdown Graceful)
+    printf("\nMaster: A encerrar servidor...\n");
+    
+    // Matar workers
+    for (int i = 0; i < config->num_workers; i++) {
+        kill(pids[i], SIGTERM);
+    }
+    
+    // Esperar que morram (evitar zombies)
+    for (int i = 0; i < config->num_workers; i++) {
+        wait(NULL);
+    }
+
+    close(server_socket);
+    destroy_semaphores(&sems);
+    destroy_shared_memory(shm);
+    printf("Master: Limpeza concluída. Adeus!\n");
 }
