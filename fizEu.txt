@@ -1,1 +1,9 @@
 http.h
+
+
+
+
+ TODOs em master.c substituídos por código real
+ TODOs em worker.c substituídos por código real
+ TODOs em thread_pool.c substituídos por código real
+ TODOs em cache.c substituídos por código real
