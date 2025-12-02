@@ -5,6 +5,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include "master.h"
+#include "config.h"
+#include "shared_mem.h"
+#include "semaphores.h"
+#include "worker.h"
 
 volatile sig_atomic_t keep_running = 1;
 
@@ -49,4 +54,18 @@ void enqueue_connection(shared_data_t* data, semaphores_t* sems, int client_fd) 
 
     sem_post(sems->queue_mutex);
     sem_post(sems->filled_slots);
+}
+
+void master_run(server_config_t *config) {
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
+    // TODO: Implementar:
+    // - create_shared_memory()
+    // - init_semaphores()
+    // - create_server_socket()
+    // - fork workers
+    // - accept loop
+    
+    printf("Master: TODO - implementar master_run()\n");
 }

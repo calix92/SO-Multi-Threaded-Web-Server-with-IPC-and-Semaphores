@@ -31,7 +31,14 @@ int load_config(const char* filename, server_config_t* config) {
                         value,
                         sizeof(config->document_root));
 
-            // Add other config parameters...
+            else if (strcmp(key, "MAX_QUEUE_SIZE") == 0)
+                config->max_queue_size = atoi(value);
+            else if (strcmp(key, "LOG_FILE") == 0)
+                strncpy(config->log_file, value, sizeof(config->log_file));
+            else if (strcmp(key, "CACHE_SIZE_MB") == 0)
+                config->cache_size_mb = atoi(value);
+            else if (strcmp(key, "TIMEOUT_SECONDS") == 0)
+                config->timeout_seconds = atoi(value);
         }
     }
 
