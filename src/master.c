@@ -58,20 +58,6 @@ void enqueue_connection(shared_data_t* data, semaphores_t* sems, int client_fd) 
     sem_post(sems->filled_slots);
 }
 
-void master_run(server_config_t *config) {
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
-
-    // TODO: Implementar:
-    // - create_shared_memory()
-    // - init_semaphores()
-    // - create_server_socket()
-    // - fork workers
-    // - accept loop
-    
-    printf("Master: TODO - implementar master_run()\n");
-}
-
 ////////////////////////////////////////////////////////////////////////////////////
 
 void master_run(server_config_t *config) {

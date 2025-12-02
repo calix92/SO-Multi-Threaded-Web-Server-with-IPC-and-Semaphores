@@ -1,9 +1,9 @@
 // http.c
+#include <sys/socket.h>
 #include "http.h"
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h> // para send()
-#include <sys/socket.h>
 
 // =========================
 // 6. HTTP Request Parser

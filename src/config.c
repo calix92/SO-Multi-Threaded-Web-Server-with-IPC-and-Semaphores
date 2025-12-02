@@ -1,7 +1,7 @@
 // config.c
+#include <stdlib.h>
 #include "config.h"
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 int load_config(const char* filename, server_config_t* config) {
