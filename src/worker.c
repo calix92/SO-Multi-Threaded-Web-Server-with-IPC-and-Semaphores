@@ -18,40 +18,49 @@ void worker_signal_handler(int signum) {
 }
 
 void worker_main(int worker_id, int server_socket) {
+    // DESLIGAR BUFFER DO PRINTF (Logs aparecem logo!)
+    setbuf(stdout, NULL);
+
     signal(SIGINT, worker_signal_handler);
     signal(SIGTERM, worker_signal_handler);
 
-    printf("Worker %d pronto para aceitar conexões.\n", worker_id);
+    printf("Worker %d [PID %d] iniciado. A ligar recursos...\n", worker_id, getpid());
 
-    // Ligar à SHM (necessário para estatísticas mais tarde)
     shared_data_t* shm = create_shared_memory();
     semaphores_t sems;
-    init_semaphores(&sems, 100);
-
-    // Criar Thread Pool (10 threads hardcoded ou via config)
-    thread_pool_t* pool = create_thread_pool(10);
-    if (!pool) {
-        perror("Worker: Erro ao criar pool");
+    if (init_semaphores(&sems, 100) < 0) {
+        perror("Worker: Falha nos semáforos");
         exit(1);
     }
+
+    thread_pool_t* pool = create_thread_pool(10);
+    if (!pool) {
+        perror("Worker: Falha na pool");
+        exit(1);
+    }
+
+    printf("Worker %d pronto! A entrar no loop de aceitação.\n", worker_id);
 
     while (worker_running) {
         struct sockaddr_in client_addr;
         socklen_t addr_len = sizeof(client_addr);
 
-        // Bloqueio no accept protegido por mutex para evitar "Thundering Herd"
-        // (Vários processos a acordar para 1 conexão)
+        // Debug: Saber se está à espera do Lock ou do Cliente
+        // printf("Worker %d: À espera do semáforo...\n", worker_id); // Comenta se for muito spam
+        
         sem_wait(sems.queue_mutex);
+        
+        // printf("Worker %d: À espera de conexão (accept)...\n", worker_id); 
         int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
+        
         sem_post(sems.queue_mutex);
 
         if (client_fd < 0) {
-            // Se foi interrompido pelo shutdown, saímos do loop
             if (worker_running) perror("Worker: Erro no accept");
             continue;
         }
 
-        // Passa o cliente para uma thread tratar
+        printf("Worker %d: Conexão recebida! FD=%d. A despachar para a thread...\n", worker_id, client_fd);
         thread_pool_dispatch(pool, client_fd);
     }
 
