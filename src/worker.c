@@ -1,3 +1,5 @@
+// src/worker.c - CÓDIGO COMPLETO
+
 // src/worker.c
 #include "worker.h"
 #include "shared_mem.h"
@@ -28,21 +30,31 @@ void worker_main(int worker_id, int server_socket) {
     printf("Worker %d [PID %d] iniciado. A ligar recursos...\n", worker_id, getpid());
 
     shared_data_t* shm = create_shared_memory();
+    if (!shm) {
+        perror("Worker: Falha na SHM");
+        exit(1);
+    }
+
     semaphores_t sems;
     if (init_semaphores(&sems, 100) < 0) {
         perror("Worker: Falha nos semáforos");
+        destroy_shared_memory(shm);
         exit(1);
     }
 
     cache_t* cache = cache_init(10);
     if (!cache) {
         perror("Worker: Falha ao criar cache");
+        destroy_shared_memory(shm);
         exit(1);
     }
 
-    thread_pool_t* pool = create_thread_pool(10, cache);
+    // ALTERAÇÃO CRÍTICA: Passar shm e sems para o create_thread_pool
+    thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems);
     if (!pool) {
         perror("Worker: Falha na pool");
+        cache_destroy(cache);
+        destroy_shared_memory(shm);
         exit(1);
     }
 
@@ -52,14 +64,8 @@ void worker_main(int worker_id, int server_socket) {
         struct sockaddr_in client_addr;
         socklen_t addr_len = sizeof(client_addr);
 
-        // Debug: Saber se está à espera do Lock ou do Cliente
-        // printf("Worker %d: À espera do semáforo...\n", worker_id); // Comenta se for muito spam
-        
         sem_wait(sems.queue_mutex);
-        
-        // printf("Worker %d: À espera de conexão (accept)...\n", worker_id); 
         int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
-        
         sem_post(sems.queue_mutex);
 
         if (client_fd < 0) {

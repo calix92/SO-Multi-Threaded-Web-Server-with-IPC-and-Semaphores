@@ -1,6 +1,5 @@
-// src/logger.c
+// src/logger.c - CÓDIGO COMPLETO
 #include "logger.h"
-#include "config.h" // Necessário para aceder ao nome do log file
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -13,13 +12,13 @@ void log_request(sem_t* log_sem, const char* client_ip,
     time_t now = time(NULL);
     struct tm* tm_info = localtime(&now);
     char timestamp[64];
-    // Formato: [DD/Month/YYYY:HH:MM:SS +0000]
+    // Formato exigido: [DD/Month/YYYY:HH:MM:SS +0000]
     strftime(timestamp, sizeof(timestamp), "%d/%b/%Y:%H:%M:%S %z", tm_info);
 
     // 1. ADQUIRIR O SEMÁFORO (Exclusão Mútua IPC)
     sem_wait(log_sem);
 
-    FILE* log_file = fopen("access.log", "a"); // Usar o nome do ficheiro (do server.conf)
+    FILE* log_file = fopen("access.log", "a"); // Usa o nome de ficheiro por defeito
 
     if (log_file) {
         // 2. ESCREVER A LINHA NO FORMATO CORRETO (Apache Combined Log Format)

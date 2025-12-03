@@ -1,3 +1,5 @@
+// src/master.c - CÓDIGO COMPLETO (com Loop de Monitorização)
+
 // src/master.c
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +14,7 @@
 #include "shared_mem.h"
 #include "semaphores.h"
 #include "worker.h"
+#include "stats.h" // Incluir para display_stats
 
 volatile sig_atomic_t keep_running = 1;
 
@@ -44,7 +47,6 @@ int create_server_socket(int port) {
     return sockfd;
 }
 
-// Esta função deixa de ser usada nesta estratégia, mas pode ficar aqui
 void enqueue_connection(shared_data_t* data, semaphores_t* sems, int client_fd) {
     sem_wait(sems->empty_slots);
     sem_wait(sems->queue_mutex);
@@ -100,7 +102,6 @@ void master_run(server_config_t *config) {
         
         if (pids[i] == 0) {
             // === PROCESSO FILHO (WORKER) ===
-            // Passamos o server_socket para o filho!
             worker_main(i, server_socket); 
             exit(0);
         }
@@ -108,7 +109,7 @@ void master_run(server_config_t *config) {
 
     printf("Master: Todos os workers iniciados. A aguardar sinais (Master inativo no IO)...\n");
 
-    // 6. Loop Principal do Master (Apenas espera para morrer)
+    // 6. Loop Principal do Master (Monitorização de Estatísticas)
     int countdown = 0;
     while (keep_running) {
         // Usa o timeout do ficheiro de config (30 segundos por defeito)

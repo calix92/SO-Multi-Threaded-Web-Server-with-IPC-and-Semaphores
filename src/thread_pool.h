@@ -1,9 +1,11 @@
-// src/thread_pool.h
+// src/thread_pool.h - CÓDIGO CORRIGIDO
 #ifndef THREAD_POOL_H
 #define THREAD_POOL_H
 
 #include <pthread.h>
 #include "cache.h"
+#include "shared_mem.h" // Incluir para shared_data_t
+#include "semaphores.h" // Incluir para semaphores_t
 
 // Estrutura para fila interna
 typedef struct task {
@@ -24,9 +26,15 @@ typedef struct {
     int shutdown;
 
     cache_t* cache;
+    
+    // NOVOS MEMBROS IPC (Permite acesso à SHM e aos Semáforos)
+    shared_data_t* shm; 
+    semaphores_t* sems;
 } thread_pool_t;
 
-thread_pool_t* create_thread_pool(int num_threads, cache_t* cache);
+// Assinatura da função de criação (TEM DE INCLUIR OS NOVOS PONTEIROS IPC)
+thread_pool_t* create_thread_pool(int num_threads, cache_t* cache, shared_data_t* shm, semaphores_t* sems);
+
 void destroy_thread_pool(thread_pool_t* pool);
 void thread_pool_dispatch(thread_pool_t* pool, int client_fd);
 
