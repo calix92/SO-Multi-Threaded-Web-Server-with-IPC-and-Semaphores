@@ -1,3 +1,4 @@
+// src/worker.c
 #include "worker.h"
 #include "shared_mem.h"
 #include "semaphores.h"
@@ -15,27 +16,28 @@ void worker_signal_handler(int signum) {
     worker_running = 0;
 }
 
-// Lógica de CONSUMIDOR: Retira da fila circular
+// CONSUMIDOR: Retira da fila
 int dequeue_connection(shared_data_t* data, semaphores_t* sems) {
-    // 1. Esperar item disponível (sem_wait(filled))
+    // 1. Espera haver itens
     if (sem_wait(sems->filled_slots) != 0) return -1;
     if (!worker_running) return -1;
 
-    // 2. Bloquear acesso à fila
+    // 2. Bloqueia acesso
     sem_wait(sems->queue_mutex);
     
-    // 3. Retirar socket
+    // 3. Retira item
     int client_fd = data->queue.sockets[data->queue.front];
     data->queue.front = (data->queue.front + 1) % MAX_QUEUE_SIZE;
     data->queue.count--;
     
-    // 4. Libertar acesso e sinalizar espaço livre
+    // 4. Liberta acesso
     sem_post(sems->queue_mutex);
     sem_post(sems->empty_slots);
     
     return client_fd;
 }
 
+// CORRIGIDO: Recebe apenas o worker_id
 void worker_main(int worker_id) {
     setbuf(stdout, NULL);
     signal(SIGINT, worker_signal_handler);
@@ -50,12 +52,16 @@ void worker_main(int worker_id) {
     if (init_semaphores(&sems, 0) < 0) exit(1);
 
     cache_t* cache = cache_init(10);
+    if (!cache) exit(1);
+
+    // Cria a pool passando os ponteiros IPC
     thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems);
+    if (!pool) exit(1);
 
     printf("Worker %d: Pronto (Consumer Mode)!\n", worker_id);
 
     while (worker_running) {
-        // Vai buscar trabalho à SHM (bloqueia aqui se vazio)
+        // Vai buscar à memória partilhada em vez de fazer accept()
         int client_fd = dequeue_connection(shm, &sems);
         
         if (client_fd >= 0) {
@@ -65,6 +71,6 @@ void worker_main(int worker_id) {
 
     destroy_thread_pool(pool);
     cache_destroy(cache);
-    // Workers não destroem SHM/Semáforos
+    // Nota: Workers não destroem a SHM
     exit(0);
 }

@@ -1,3 +1,4 @@
+// src/master.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -51,20 +52,15 @@ int create_server_socket(int port) {
     return sockfd;
 }
 
-// Lógica de PRODUTOR: Coloca na fila circular
+// PRODUTOR: Põe na memória partilhada
 void enqueue_connection(shared_data_t* data, semaphores_t* sems, int client_fd) {
-    // 1. Esperar por espaço livre (sem_wait(empty))
     sem_wait(sems->empty_slots);
-    
-    // 2. Bloquear acesso à fila (Mutex)
     sem_wait(sems->queue_mutex);
     
-    // 3. Inserir socket
     data->queue.sockets[data->queue.rear] = client_fd;
     data->queue.rear = (data->queue.rear + 1) % MAX_QUEUE_SIZE;
     data->queue.count++;
     
-    // 4. Libertar acesso e sinalizar novo item
     sem_post(sems->queue_mutex);
     sem_post(sems->filled_slots);
 }
@@ -73,9 +69,9 @@ void master_run(server_config_t *config) {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
 
-    printf("Master [PID %d]: A iniciar na porta %d com %d workers...\n", getpid(), config->port, config->num_workers);
+    printf("Master [PID %d]: A iniciar na porta %d...\n", getpid(), config->port);
 
-    // IPC Setup
+    // 1. IPC
     shared_data_t* shm = create_shared_memory();
     if (!shm) { perror("Master: Falha SHM"); exit(1); }
 
@@ -86,6 +82,7 @@ void master_run(server_config_t *config) {
         exit(1);
     }
 
+    // 2. Socket
     int server_socket = create_server_socket(config->port);
     if (server_socket < 0) {
         perror("Master: Falha Socket");
@@ -94,43 +91,40 @@ void master_run(server_config_t *config) {
         exit(1);
     }
 
-    // Fork Workers
+    // 3. Fork Workers
     pid_t pids[config->num_workers];
     for (int i = 0; i < config->num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
-            close(server_socket); // Filho não precisa do listener
-            worker_main(i);       // Chama o worker (Consumer)
+            close(server_socket); // Filho não precisa do socket de escuta
+            worker_main(i);       // CORRIGIDO: Só passa o ID
             exit(0);
         }
     }
 
     printf("Master: Workers iniciados. A aceitar conexões...\n");
 
-    // Loop Principal (PRODUTOR)
+    // 4. Loop Principal (PRODUTOR)
     while (keep_running) {
-        // Monitorização simples: a cada 30 timeouts (aprox 30s) mostra stats
-        // Mas a prioridade é o accept. Usamos um contador simples aqui ou alarm.
-        // Para simplificar e garantir performance no accept, mostramos stats apenas ao sair ou com sinal.
-        // Se quiseres timer real, precisas de sigaction com SIGALRM.
-        
         struct sockaddr_in client_addr;
         socklen_t addr_len = sizeof(client_addr);
         
+        // Master faz o accept
         int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
         
         if (client_fd < 0) {
-            if (errno == EINTR) break; // Parar no Ctrl+C
+            if (errno == EINTR) break;
             perror("Master: Erro no accept");
             continue;
         }
 
+        // Põe na fila para os workers
         enqueue_connection(shm, &sems, client_fd);
     }
 
     // Cleanup
     printf("\nMaster: A encerrar...\n");
-    display_stats(shm, &sems); // Mostra estatísticas finais
+    display_stats(shm, &sems);
 
     for (int i = 0; i < config->num_workers; i++) {
         if (pids[i] > 0) kill(pids[i], SIGTERM);
