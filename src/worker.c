@@ -1,4 +1,3 @@
-// src/worker.c
 #include "worker.h"
 #include "shared_mem.h"
 #include "semaphores.h"
@@ -7,6 +6,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/socket.h>
+#include <netinet/in.h> // Necessário para sockaddr_in
 #include "cache.h"
 
 volatile sig_atomic_t worker_running = 1;
@@ -16,29 +17,7 @@ void worker_signal_handler(int signum) {
     worker_running = 0;
 }
 
-// CONSUMIDOR: Retira da fila
-int dequeue_connection(shared_data_t* data, semaphores_t* sems) {
-    // 1. Espera haver itens
-    if (sem_wait(sems->filled_slots) != 0) return -1;
-    if (!worker_running) return -1;
-
-    // 2. Bloqueia acesso
-    sem_wait(sems->queue_mutex);
-    
-    // 3. Retira item
-    int client_fd = data->queue.sockets[data->queue.front];
-    data->queue.front = (data->queue.front + 1) % MAX_QUEUE_SIZE;
-    data->queue.count--;
-    
-    // 4. Liberta acesso
-    sem_post(sems->queue_mutex);
-    sem_post(sems->empty_slots);
-    
-    return client_fd;
-}
-
-// CORRIGIDO: Recebe apenas o worker_id
-void worker_main(int worker_id) {
+void worker_main(int worker_id, int server_socket) {
     setbuf(stdout, NULL);
     signal(SIGINT, worker_signal_handler);
     signal(SIGTERM, worker_signal_handler);
@@ -54,23 +33,35 @@ void worker_main(int worker_id) {
     cache_t* cache = cache_init(10);
     if (!cache) exit(1);
 
-    // Cria a pool passando os ponteiros IPC
     thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems);
     if (!pool) exit(1);
 
-    printf("Worker %d: Pronto (Consumer Mode)!\n", worker_id);
+    printf("Worker %d: Pronto (Accept Mode)!\n", worker_id);
 
     while (worker_running) {
-        // Vai buscar à memória partilhada em vez de fazer accept()
-        int client_fd = dequeue_connection(shm, &sems);
+        struct sockaddr_in client_addr;
+        socklen_t addr_len = sizeof(client_addr);
+
+        // 1. Bloquear acesso ao socket (Sincronização entre Processos)
+        sem_wait(sems.queue_mutex);
         
-        if (client_fd >= 0) {
-            thread_pool_dispatch(pool, client_fd);
+        // 2. Aceitar conexão
+        int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
+        
+        // 3. Libertar acesso para outros workers
+        sem_post(sems.queue_mutex);
+
+        if (client_fd < 0) {
+            // Se foi interrompido por sinal ou erro, ignora
+            continue; 
         }
+
+        // printf("Worker %d: Aceitou conexão FD=%d\n", worker_id, client_fd);
+        thread_pool_dispatch(pool, client_fd);
     }
 
     destroy_thread_pool(pool);
     cache_destroy(cache);
-    // Nota: Workers não destroem a SHM
+    close(server_socket); // Fecha a cópia local do socket
     exit(0);
 }

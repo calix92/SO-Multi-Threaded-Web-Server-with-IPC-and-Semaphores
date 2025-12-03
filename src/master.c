@@ -1,4 +1,3 @@
-// src/master.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -7,13 +6,12 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <signal.h>
-#include <errno.h>
 #include "master.h"
 #include "config.h"
 #include "shared_mem.h"
 #include "semaphores.h"
 #include "worker.h"
-#include "stats.h"
+#include "stats.h" // Importante para o display_stats
 
 volatile sig_atomic_t keep_running = 1;
 
@@ -52,19 +50,6 @@ int create_server_socket(int port) {
     return sockfd;
 }
 
-// PRODUTOR: Põe na memória partilhada
-void enqueue_connection(shared_data_t* data, semaphores_t* sems, int client_fd) {
-    sem_wait(sems->empty_slots);
-    sem_wait(sems->queue_mutex);
-    
-    data->queue.sockets[data->queue.rear] = client_fd;
-    data->queue.rear = (data->queue.rear + 1) % MAX_QUEUE_SIZE;
-    data->queue.count++;
-    
-    sem_post(sems->queue_mutex);
-    sem_post(sems->filled_slots);
-}
-
 void master_run(server_config_t *config) {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
@@ -85,52 +70,44 @@ void master_run(server_config_t *config) {
     // 2. Socket
     int server_socket = create_server_socket(config->port);
     if (server_socket < 0) {
-        perror("Master: Falha Socket");
         destroy_semaphores(&sems);
         destroy_shared_memory(shm);
         exit(1);
     }
 
-    // 3. Fork Workers
+    // 3. Fork Workers (Passamos o socket para eles herdarem)
     pid_t pids[config->num_workers];
     for (int i = 0; i < config->num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
-            close(server_socket); // Filho não precisa do socket de escuta
-            worker_main(i);       // CORRIGIDO: Só passa o ID
+            // Worker recebe o socket e vai fazer o accept
+            worker_main(i, server_socket); 
             exit(0);
         }
     }
 
-    printf("Master: Workers iniciados. A aceitar conexões...\n");
+    printf("Master: Workers iniciados. Servidor Online.\n");
 
-    // 4. Loop Principal (PRODUTOR)
+    // 4. Loop Principal (Apenas monitorização, o accept é nos workers)
+    int countdown = 0;
     while (keep_running) {
-        struct sockaddr_in client_addr;
-        socklen_t addr_len = sizeof(client_addr);
-        
-        // Master faz o accept
-        int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
-        
-        if (client_fd < 0) {
-            if (errno == EINTR) break;
-            perror("Master: Erro no accept");
-            continue;
+        sleep(1); 
+        countdown++;
+        if (countdown >= config->timeout_seconds) {
+            display_stats(shm, &sems);
+            countdown = 0;
         }
-
-        // Põe na fila para os workers
-        enqueue_connection(shm, &sems, client_fd);
     }
 
     // Cleanup
     printf("\nMaster: A encerrar...\n");
-    display_stats(shm, &sems);
-
+    
     for (int i = 0; i < config->num_workers; i++) {
         if (pids[i] > 0) kill(pids[i], SIGTERM);
     }
     for (int i = 0; i < config->num_workers; i++) wait(NULL);
 
+    display_stats(shm, &sems);
     close(server_socket);
     destroy_semaphores(&sems);
     destroy_shared_memory(shm);
