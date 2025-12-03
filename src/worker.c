@@ -1,6 +1,3 @@
-// src/worker.c - CÓDIGO COMPLETO
-
-// src/worker.c
 #include "worker.h"
 #include "shared_mem.h"
 #include "semaphores.h"
@@ -9,8 +6,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include "cache.h"
 
 volatile sig_atomic_t worker_running = 1;
@@ -20,65 +15,56 @@ void worker_signal_handler(int signum) {
     worker_running = 0;
 }
 
-void worker_main(int worker_id, int server_socket) {
-    // DESLIGAR BUFFER DO PRINTF (Logs aparecem logo!)
-    setbuf(stdout, NULL);
+// Lógica de CONSUMIDOR: Retira da fila circular
+int dequeue_connection(shared_data_t* data, semaphores_t* sems) {
+    // 1. Esperar item disponível (sem_wait(filled))
+    if (sem_wait(sems->filled_slots) != 0) return -1;
+    if (!worker_running) return -1;
 
+    // 2. Bloquear acesso à fila
+    sem_wait(sems->queue_mutex);
+    
+    // 3. Retirar socket
+    int client_fd = data->queue.sockets[data->queue.front];
+    data->queue.front = (data->queue.front + 1) % MAX_QUEUE_SIZE;
+    data->queue.count--;
+    
+    // 4. Libertar acesso e sinalizar espaço livre
+    sem_post(sems->queue_mutex);
+    sem_post(sems->empty_slots);
+    
+    return client_fd;
+}
+
+void worker_main(int worker_id) {
+    setbuf(stdout, NULL);
     signal(SIGINT, worker_signal_handler);
     signal(SIGTERM, worker_signal_handler);
 
-    printf("Worker %d [PID %d] iniciado. A ligar recursos...\n", worker_id, getpid());
+    printf("Worker %d [PID %d]: A iniciar...\n", worker_id, getpid());
 
     shared_data_t* shm = create_shared_memory();
-    if (!shm) {
-        perror("Worker: Falha na SHM");
-        exit(1);
-    }
+    if (!shm) exit(1);
 
     semaphores_t sems;
-    if (init_semaphores(&sems, 100) < 0) {
-        perror("Worker: Falha nos semáforos");
-        destroy_shared_memory(shm);
-        exit(1);
-    }
+    if (init_semaphores(&sems, 0) < 0) exit(1);
 
     cache_t* cache = cache_init(10);
-    if (!cache) {
-        perror("Worker: Falha ao criar cache");
-        destroy_shared_memory(shm);
-        exit(1);
-    }
-
-    // ALTERAÇÃO CRÍTICA: Passar shm e sems para o create_thread_pool
     thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems);
-    if (!pool) {
-        perror("Worker: Falha na pool");
-        cache_destroy(cache);
-        destroy_shared_memory(shm);
-        exit(1);
-    }
 
-    printf("Worker %d pronto! A entrar no loop de aceitação.\n", worker_id);
+    printf("Worker %d: Pronto (Consumer Mode)!\n", worker_id);
 
     while (worker_running) {
-        struct sockaddr_in client_addr;
-        socklen_t addr_len = sizeof(client_addr);
-
-        sem_wait(sems.queue_mutex);
-        int client_fd = accept(server_socket, (struct sockaddr*)&client_addr, &addr_len);
-        sem_post(sems.queue_mutex);
-
-        if (client_fd < 0) {
-            if (worker_running) perror("Worker: Erro no accept");
-            continue;
+        // Vai buscar trabalho à SHM (bloqueia aqui se vazio)
+        int client_fd = dequeue_connection(shm, &sems);
+        
+        if (client_fd >= 0) {
+            thread_pool_dispatch(pool, client_fd);
         }
-
-        printf("Worker %d: Conexão recebida! FD=%d. A despachar para a thread...\n", worker_id, client_fd);
-        thread_pool_dispatch(pool, client_fd);
     }
 
-    printf("Worker %d a encerrar...\n", worker_id);
     destroy_thread_pool(pool);
     cache_destroy(cache);
+    // Workers não destroem SHM/Semáforos
     exit(0);
 }

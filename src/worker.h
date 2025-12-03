@@ -1,7 +1,7 @@
-// src/worker.h
 #ifndef WORKER_H
 #define WORKER_H
 
-void worker_main(int worker_id, int server_socket);
+// Recebe apenas o ID, não precisa do socket porque vai ler da SHM
+void worker_main(int worker_id);
 
 #endif

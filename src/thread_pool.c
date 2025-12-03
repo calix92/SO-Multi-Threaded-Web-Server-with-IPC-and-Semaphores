@@ -109,45 +109,50 @@ void handle_client(thread_pool_t* pool, int client_fd) {
         }
 
         if (cached_entry) {
-            // === CACHE HIT ===
-            printf("[Thread] CACHE HIT: Servindo %s da memória.\n", file_path);
+            // CACHE HIT
+            printf("[Thread] CACHE HIT: %s\n", file_path);
             bytes_sent = cached_entry->size;
             status = 200;
-            send_http_response(client_fd, status, "OK", get_mime_type(file_path), cached_entry->data, bytes_sent);
+            
+            // Só envia body se NÃO for HEAD
+            if (strcmp(req.method, "HEAD") == 0) {
+                send_http_response(client_fd, 200, "OK", get_mime_type(file_path), NULL, bytes_sent);
+            } else {
+                send_http_response(client_fd, 200, "OK", get_mime_type(file_path), cached_entry->data, bytes_sent);
+            }
         } 
         else {
-            // === CACHE MISS (Ler do Disco) ===
+            // CACHE MISS
             FILE* file = fopen(file_path, "rb");
             if (file) {
                 fseek(file, 0, SEEK_END);
                 long fsize = ftell(file);
                 fseek(file, 0, SEEK_SET);
 
-                char* body = malloc(fsize);
-                if (body) {
-                    size_t read_bytes = fread(body, 1, fsize, file);
-                    
-                    bytes_sent = read_bytes;
-                    status = 200;
-                    
-                    // Enviar resposta ao cliente
-                    send_http_response(client_fd, status, "OK", get_mime_type(file_path), body, bytes_sent);
-                    
-                    // GUARDAR NA CACHE (se houver cache e ficheiro < 1MB)
-                    if (pool->cache && read_bytes < 1024 * 1024) {
-                        cache_put(pool->cache, file_path, body, read_bytes);
-                        printf("[Thread] CACHE MISS: %s guardado na cache.\n", file_path);
-                    }
-                    
-                    free(body);
+                // Se for HEAD, não precisamos de ler o ficheiro todo para a memória
+                if (strcmp(req.method, "HEAD") == 0) {
+                    send_http_response(client_fd, 200, "OK", get_mime_type(file_path), NULL, fsize);
+                    bytes_sent = 0; // No body transferred, but content-length sent
+                    // Nota: para stats, talvez queiras contar o fsize ou 0. Normalmente conta-se bytes transferidos.
                 } else {
-                    // 500 Internal Server Error (malloc falhou)
-                    send_error_page_file(client_fd, 500, "Internal Server Error", "www/errors/500.html", shm, sems, req_path);
-                    status = 500;
+                    char* body = malloc(fsize);
+                    if (body) {
+                        size_t read_bytes = fread(body, 1, fsize, file);
+                        bytes_sent = read_bytes;
+                        status = 200;
+                        
+                        send_http_response(client_fd, 200, "OK", get_mime_type(file_path), body, bytes_sent);
+                        
+                        // Cache logic...
+                        if (pool->cache && read_bytes < 1024 * 1024) {
+                            cache_put(pool->cache, file_path, body, read_bytes);
+                        }
+                        free(body);
+                    }
                 }
                 fclose(file);
             } else {
-                // 404 Not Found (Ficheiro não existe)
+                // 404 logic...
                 send_error_page_file(client_fd, 404, "Not Found", "www/errors/404.html", shm, sems, req_path);
                 status = 404;
             }
