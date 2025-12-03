@@ -60,6 +60,8 @@ void master_run(server_config_t *config) {
     shared_data_t* shm = create_shared_memory();
     if (!shm) { perror("Master: Falha SHM"); exit(1); }
 
+    shm->stats.start_time = time(NULL);
+
     semaphores_t sems;
     if (init_semaphores(&sems, config->max_queue_size) != 0) {
         perror("Master: Falha Semáforos");

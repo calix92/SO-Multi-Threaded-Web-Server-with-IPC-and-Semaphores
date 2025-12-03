@@ -2,6 +2,8 @@
 #ifndef SHARED_MEM_H
 #define SHARED_MEM_H
 
+#include <time.h>
+
 #define MAX_QUEUE_SIZE 100
 
 typedef struct {
@@ -11,6 +13,10 @@ typedef struct {
     long status_404;
     long status_500;
     int active_connections;
+
+    time_t start_time;
+    long total_response_time_ms;
+    long cache_hits;
 } server_stats_t;
 
 typedef struct {

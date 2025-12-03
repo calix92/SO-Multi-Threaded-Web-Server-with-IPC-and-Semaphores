@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/time.h>
 
 // Função auxiliar para determinar o MIME type
 const char* get_mime_type(const char* filename) {
@@ -54,25 +55,38 @@ void send_error_page_file(int fd, int status, const char* status_msg, const char
     }
     fclose(file);
 
-    log_request(sems->log_mutex, "127.0.0.1", "GET", req_path, status, bytes_sent);
-    update_stats(shm, sems, status, bytes_sent);
 }
 
 // Função principal de tratamento de pedidos
 void handle_client(thread_pool_t* pool, int client_fd) {
     setbuf(stdout, NULL);
     
-    char buffer[4096];
-    ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-    
+    // --- 1. INICIAR CRONÓMETRO E CONEXÃO ATIVA ---
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
+
     shared_data_t* shm = pool->shm;
     semaphores_t* sems = pool->sems;
+
+    sem_wait(sems->stats_mutex);
+    shm->stats.active_connections++;
+    sem_post(sems->stats_mutex);
+    // ---------------------------------------------
+
+    char buffer[4096];
+    ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     
     int status = 500;
     size_t bytes_sent = 0;
     char req_path[512] = "";
+    int is_cache_hit = 0; // Variável para controlar o hit
     
     if (bytes_read <= 0) {
+        // Se falhar a leitura, temos de decrementar a conexão antes de sair
+        sem_wait(sems->stats_mutex);
+        shm->stats.active_connections--;
+        sem_post(sems->stats_mutex);
+        
         close(client_fd);
         return;
     }
@@ -100,6 +114,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
 
         if (cached_entry) {
             printf("[Thread] CACHE HIT: %s\n", file_path);
+            is_cache_hit = 1; // Marcar como Hit
             bytes_sent = cached_entry->size;
             status = 200;
             
@@ -136,16 +151,37 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                 }
                 fclose(file);
             } else {
+                // Passamos req_path para logging dentro da função de erro se necessário, 
+                // mas aqui a função send_error_page_file já chama update_stats internamente? 
+                // CUIDADO: A tua função send_error_page_file original chamava update_stats.
+                // Como alterámos a assinatura de update_stats, tens de atualizar essa função também 
+                // OU (mais simples) remover as chamadas de update_stats de dentro de send_error_page_file
+                // e deixar apenas esta chamada final aqui.
+                
+                // Para simplificar, assume que a chamada update_stats é feita APENAS no fim desta função.
                 send_error_page_file(client_fd, 404, "Not Found", "www/errors/404.html", shm, sems, req_path);
                 status = 404;
             }
         }
     }
     
-    if (status == 200 && req_path[0] != '\0') {
+    // --- 2. PARAR CRONÓMETRO E ATUALIZAR ESTATÍSTICAS ---
+    gettimeofday(&end, NULL);
+    long seconds = (end.tv_sec - start.tv_sec);
+    long micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
+    long duration_ms = micros / 1000;
+
+    // Decrementar Active Connections
+    sem_wait(sems->stats_mutex);
+    shm->stats.active_connections--;
+    sem_post(sems->stats_mutex);
+
+    // Registar tudo (incluindo tempo e cache hit)
+    if (req_path[0] != '\0') {
         log_request(sems->log_mutex, "127.0.0.1", req.method, req_path, status, bytes_sent);
-        update_stats(shm, sems, status, bytes_sent);
+        update_stats(shm, sems, status, bytes_sent, duration_ms, is_cache_hit);
     }
+    // ----------------------------------------------------
 
     close(client_fd);
 }
