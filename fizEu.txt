@@ -7,3 +7,11 @@ http.h
  TODOs em worker.c substituídos por código real
  TODOs em thread_pool.c substituídos por código real
  TODOs em cache.c substituídos por código real
+
+
+
+rm -rf obj server
+
+rm /dev/shm/ws_* 2>/dev/null
+
+rm /dev/shm/sem.ws_* 2>/dev/null
