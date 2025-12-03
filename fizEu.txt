@@ -15,3 +15,5 @@ rm -rf obj server
 rm /dev/shm/ws_* 2>/dev/null
 
 rm /dev/shm/sem.ws_* 2>/dev/null
+
+http://localhost:8080/ola.html
