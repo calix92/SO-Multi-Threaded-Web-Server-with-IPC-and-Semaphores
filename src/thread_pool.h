@@ -3,6 +3,7 @@
 #define THREAD_POOL_H
 
 #include <pthread.h>
+#include "cache.h"
 
 // Estrutura para fila interna
 typedef struct task {
@@ -21,9 +22,11 @@ typedef struct {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
     int shutdown;
+
+    cache_t* cache;
 } thread_pool_t;
 
-thread_pool_t* create_thread_pool(int num_threads);
+thread_pool_t* create_thread_pool(int num_threads, cache_t* cache);
 void destroy_thread_pool(thread_pool_t* pool);
 void thread_pool_dispatch(thread_pool_t* pool, int client_fd);
 

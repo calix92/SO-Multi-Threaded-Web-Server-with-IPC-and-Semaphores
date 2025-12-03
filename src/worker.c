@@ -9,6 +9,7 @@
 #include <signal.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "cache.h"
 
 volatile sig_atomic_t worker_running = 1;
 
@@ -33,7 +34,13 @@ void worker_main(int worker_id, int server_socket) {
         exit(1);
     }
 
-    thread_pool_t* pool = create_thread_pool(10);
+    cache_t* cache = cache_init(10);
+    if (!cache) {
+        perror("Worker: Falha ao criar cache");
+        exit(1);
+    }
+
+    thread_pool_t* pool = create_thread_pool(10, cache);
     if (!pool) {
         perror("Worker: Falha na pool");
         exit(1);
@@ -66,5 +73,6 @@ void worker_main(int worker_id, int server_socket) {
 
     printf("Worker %d a encerrar...\n", worker_id);
     destroy_thread_pool(pool);
+    cache_destroy(cache);
     exit(0);
 }
