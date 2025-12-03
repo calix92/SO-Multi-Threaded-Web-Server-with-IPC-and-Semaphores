@@ -109,8 +109,16 @@ void master_run(server_config_t *config) {
     printf("Master: Todos os workers iniciados. A aguardar sinais (Master inativo no IO)...\n");
 
     // 6. Loop Principal do Master (Apenas espera para morrer)
+    int countdown = 0;
     while (keep_running) {
-        sleep(1);
+        // Usa o timeout do ficheiro de config (30 segundos por defeito)
+        if (countdown <= 0) { 
+            // Mostra as estatísticas protegidas pelo Semáforo
+            display_stats(shm, &sems); 
+            countdown = config->timeout_seconds;
+        }
+        sleep(1); // Dorme por 1 segundo, mas permite reagir ao Ctrl+C
+        countdown--;
     }
 
     // 7. Cleanup
