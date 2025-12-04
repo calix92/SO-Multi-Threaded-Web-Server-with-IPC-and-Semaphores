@@ -26,9 +26,9 @@ clean:
 
 # Limpar recursos IPC antigos (SHM/Sems) para evitar erros no arranque
 run: $(TARGET)
-	@echo "🧹 A limpar recursos IPC antigos (SHM e Semáforos)..."
+	@echo "A limpar recursos IPC antigos (SHM e Semáforos)..."
 	-rm -f /dev/shm/ws_* /dev/shm/sem.ws_* 2>/dev/null || true
-	@echo "🚀 A iniciar o servidor..."
+	@echo "A iniciar o servidor..."
 	./$(TARGET)
 
 test: $(TARGET)
