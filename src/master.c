@@ -1,3 +1,5 @@
+// src/master.c
+#define _POSIX_C_SOURCE 200809L // IMPORTANTE PARA O ERRO DO SIGACTION
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -6,12 +8,14 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <errno.h>
+#include <time.h>
 #include "master.h"
 #include "config.h"
 #include "shared_mem.h"
 #include "semaphores.h"
 #include "worker.h"
-#include "stats.h" // Importante para o display_stats
+#include "stats.h" 
 
 volatile sig_atomic_t keep_running = 1;
 
@@ -51,25 +55,29 @@ int create_server_socket(int port) {
 }
 
 void master_run(server_config_t *config) {
-    signal(SIGINT, signal_handler);
-    signal(SIGTERM, signal_handler);
+    struct sigaction sa;
+    sa.sa_handler = signal_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
 
     printf("Master [PID %d]: A iniciar na porta %d...\n", getpid(), config->port);
 
     // 1. IPC
     shared_data_t* shm = create_shared_memory();
     if (!shm) { perror("Master: Falha SHM"); exit(1); }
-
     shm->stats.start_time = time(NULL);
 
     semaphores_t sems;
+    // Iniciamos fila cheia como 0, mas neste modelo não vamos usar a fila circular para sockets
     if (init_semaphores(&sems, config->max_queue_size) != 0) {
         perror("Master: Falha Semáforos");
         destroy_shared_memory(shm);
         exit(1);
     }
 
-    // 2. Socket
+    // 2. Socket (Criar ANTES do fork para ser herdado)
     int server_socket = create_server_socket(config->port);
     if (server_socket < 0) {
         destroy_semaphores(&sems);
@@ -77,12 +85,12 @@ void master_run(server_config_t *config) {
         exit(1);
     }
 
-    // 3. Fork Workers (Passamos o socket para eles herdarem)
+    // 3. Fork Workers
     pid_t pids[config->num_workers];
     for (int i = 0; i < config->num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
-            // Worker recebe o socket e vai fazer o accept
+            // Worker herda o server_socket e vai usá-lo
             worker_main(i, server_socket); 
             exit(0);
         }
@@ -90,7 +98,7 @@ void master_run(server_config_t *config) {
 
     printf("Master: Workers iniciados. Servidor Online.\n");
 
-    // 4. Loop Principal (Apenas monitorização, o accept é nos workers)
+    // 4. Loop Principal (Só estatísticas)
     int countdown = 0;
     while (keep_running) {
         sleep(1); 
@@ -103,7 +111,6 @@ void master_run(server_config_t *config) {
 
     // Cleanup
     printf("\nMaster: A encerrar...\n");
-    
     for (int i = 0; i < config->num_workers; i++) {
         if (pids[i] > 0) kill(pids[i], SIGTERM);
     }
