@@ -12,6 +12,7 @@ void update_stats(shared_data_t* data, semaphores_t* sems,
     
     if (status == 200) data->stats.status_200++;
     else if (status == 404) data->stats.status_404++;
+    else if (status == 403) data->stats.status_403++;
     else if (status == 500) data->stats.status_500++;
     
     // --- NOVOS DADOS ---
@@ -44,6 +45,7 @@ void display_stats(shared_data_t* data, semaphores_t* sems) {
     printf("Total Requests: %ld\n", data->stats.total_requests);
     printf("Bytes Transferred: %ld\n", data->stats.bytes_transferred);
     printf("Status 200: %ld\n", data->stats.status_200);
+    printf("Status 403: %ld\n", data->stats.status_403);
     printf("Status 404: %ld\n", data->stats.status_404);
     printf("Status 500: %ld\n", data->stats.status_500);
     printf("Average Response Time: %.2f ms\n", avg_time);
