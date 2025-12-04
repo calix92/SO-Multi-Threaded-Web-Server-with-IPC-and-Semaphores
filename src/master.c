@@ -1,5 +1,5 @@
 // src/master.c
-#define _POSIX_C_SOURCE 200809L // IMPORTANTE PARA O ERRO DO SIGACTION
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -8,14 +8,13 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <signal.h>
-#include <errno.h>
 #include <time.h>
 #include "master.h"
 #include "config.h"
 #include "shared_mem.h"
 #include "semaphores.h"
 #include "worker.h"
-#include "stats.h" 
+#include "stats.h"
 
 volatile sig_atomic_t keep_running = 1;
 
@@ -70,14 +69,13 @@ void master_run(server_config_t *config) {
     shm->stats.start_time = time(NULL);
 
     semaphores_t sems;
-    // Iniciamos fila cheia como 0, mas neste modelo não vamos usar a fila circular para sockets
     if (init_semaphores(&sems, config->max_queue_size) != 0) {
         perror("Master: Falha Semáforos");
         destroy_shared_memory(shm);
         exit(1);
     }
 
-    // 2. Socket (Criar ANTES do fork para ser herdado)
+    // 2. Socket (Criar ANTES do fork)
     int server_socket = create_server_socket(config->port);
     if (server_socket < 0) {
         destroy_semaphores(&sems);
@@ -90,7 +88,7 @@ void master_run(server_config_t *config) {
     for (int i = 0; i < config->num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
-            // Worker herda o server_socket e vai usá-lo
+            // Worker herda o server_socket e vai usá-lo para accept
             worker_main(i, server_socket); 
             exit(0);
         }
@@ -98,7 +96,7 @@ void master_run(server_config_t *config) {
 
     printf("Master: Workers iniciados. Servidor Online.\n");
 
-    // 4. Loop Principal (Só estatísticas)
+    // 4. Loop Principal (Apenas monitorização/Stats)
     int countdown = 0;
     while (keep_running) {
         sleep(1); 

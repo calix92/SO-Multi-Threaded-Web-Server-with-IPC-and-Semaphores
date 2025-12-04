@@ -100,12 +100,21 @@ void handle_client(thread_pool_t* pool, int client_fd) {
     } else {
         strcpy(req_path, req.path);
         
-        char file_path[512];
+        // Dentro de src/thread_pool.c, na função handle_client:
+
+    // ... (depois do parse_http_request) ...
+    
+    // CORREÇÃO: Aumentar o buffer para evitar o aviso do compilador e overflows
+    char file_path[1024]; 
+    
         if (strcmp(req.path, "/") == 0) {
-            sprintf(file_path, "www/index.html");
+            snprintf(file_path, sizeof(file_path), "www/index.html");
         } else {
-            sprintf(file_path, "www%s", req.path);
+            // Usar snprintf em vez de sprintf para segurança
+            snprintf(file_path, sizeof(file_path), "www%s", req.path);
         }
+    
+    // ... (resto do código) ...
 
         cache_entry_t* cached_entry = NULL;
         if (pool->cache) {
