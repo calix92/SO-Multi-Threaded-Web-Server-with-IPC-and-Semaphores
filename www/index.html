@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ConcurrentHTTP Server</title>
+    <title>ConcurrentHTTP Server Demo</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Bem-vindo ao Concurrent HTTP Server!</h1>
-    <p>O servidor está a funcionar corretamente.</p>
+    <div class="container">
+        <h1>ConcurrentHTTP Server</h1>
+        <p>Se vês esta página com estilo (caixa branca, fundo cinza), o <strong>CSS</strong> está a funcionar.</p>
+        
+        <div id="js-status" class="status-box">
+             A carregar JavaScript... (Se isto não mudar, o JS falhou)
+        </div>
+
+        <h3>Teste de Imagens</h3>
+        <p>Abaixo devem aparecer duas imagens (se as tiveres colocado na pasta):</p>
+        <img src="images/logo.png" alt="Teste PNG">
+        <img src="images/photo.jpg" alt="Teste JPG">
+
+        <h3>Teste de Erros</h3>
+        <p>
+            <a href="pagina_que_nao_existe.html">Clica aqui para testar o Erro 404</a>
+        </p>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
