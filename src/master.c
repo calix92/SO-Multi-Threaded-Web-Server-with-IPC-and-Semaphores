@@ -15,6 +15,7 @@
 #include "semaphores.h"
 #include "worker.h"
 #include "stats.h"
+#include <errno.h>
 
 volatile sig_atomic_t keep_running = 1;
 
@@ -63,46 +64,51 @@ void master_run(server_config_t *config) {
 
     printf("Master [PID %d]: A iniciar na porta %d...\n", getpid(), config->port);
 
-    // 1. IPC
+    // 1. Limpeza Preventiva (Importante!)
+    shm_unlink("/webserver_shm"); 
+    sem_unlink("/ws_empty"); sem_unlink("/ws_filled");
+    sem_unlink("/ws_queue_mutex"); sem_unlink("/ws_stats_mutex"); sem_unlink("/ws_log_mutex");
+
+    // 2. IPC Setup
     shared_data_t* shm = create_shared_memory();
     if (!shm) { perror("Master: Falha SHM"); exit(1); }
+    // INICIALIZAR MEMÓRIA A ZEROS
+    memset(shm, 0, sizeof(shared_data_t)); 
     shm->stats.start_time = time(NULL);
 
     semaphores_t sems;
     if (init_semaphores(&sems, config->max_queue_size) != 0) {
         perror("Master: Falha Semáforos");
-        destroy_shared_memory(shm);
         exit(1);
     }
 
-    // 2. Socket (Criar ANTES do fork)
+    // 3. Socket
     int server_socket = create_server_socket(config->port);
-    if (server_socket < 0) {
-        destroy_semaphores(&sems);
-        destroy_shared_memory(shm);
-        exit(1);
-    }
+    if (server_socket < 0) exit(1);
 
-    // 3. Fork Workers
+    // 4. Fork Workers
     pid_t pids[config->num_workers];
     for (int i = 0; i < config->num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
-            // Worker herda o server_socket e vai usá-lo para accept
-            worker_main(i, server_socket); 
+            worker_main(i, server_socket); // Worker herda o listening socket
             exit(0);
         }
     }
 
     printf("Master: Workers iniciados. Servidor Online.\n");
 
-    // 4. Loop Principal (Apenas monitorização/Stats)
+    // 5. Loop de Monitorização e Estatísticas
+    // O Master está livre para fazer gestão, pois os Workers tratam das conexões.
     int countdown = 0;
+    
     while (keep_running) {
-        sleep(1); 
+        sleep(1); // Espera 1 segundo
+        
         countdown++;
+        // Verifica se passou o tempo definido (30s) para mostrar stats
         if (countdown >= config->timeout_seconds) {
-            display_stats(shm, &sems);
+            display_stats(shm, &sems); // <--- ESTA É A FUNÇÃO QUE FALTAVA
             countdown = 0;
         }
     }
@@ -114,7 +120,6 @@ void master_run(server_config_t *config) {
     }
     for (int i = 0; i < config->num_workers; i++) wait(NULL);
 
-    display_stats(shm, &sems);
     close(server_socket);
     destroy_semaphores(&sems);
     destroy_shared_memory(shm);

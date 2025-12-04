@@ -21,6 +21,12 @@ shared_data_t* create_shared_memory() {
     close(shm_fd);
     
     if (data == MAP_FAILED) return NULL;
+
+    // --- CORREÇÃO 2: LIMPEZA DA MEMÓRIA ---
+    // Garante que a fila e as stats começam a zero!
+    memset(data, 0, sizeof(shared_data_t));
+    // --------------------------------------
+
     return data;
 }
 

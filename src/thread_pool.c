@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/time.h>
+#include <errno.h>
 
 // Função auxiliar para determinar o MIME type
 const char* get_mime_type(const char* filename) {
@@ -57,7 +58,6 @@ void send_error_page_file(int fd, int status, const char* status_msg, const char
 
 }
 
-// Função principal de tratamento de pedidos
 void handle_client(thread_pool_t* pool, int client_fd) {
     setbuf(stdout, NULL);
     
@@ -100,30 +100,25 @@ void handle_client(thread_pool_t* pool, int client_fd) {
     } else {
         strcpy(req_path, req.path);
         
-        // Dentro de src/thread_pool.c, na função handle_client:
-
-    // ... (depois do parse_http_request) ...
-    
-    // CORREÇÃO: Aumentar o buffer para evitar o aviso do compilador e overflows
-    char file_path[1024]; 
+        // Construção segura do caminho do ficheiro
+        char file_path[1024]; 
     
         if (strcmp(req.path, "/") == 0) {
             snprintf(file_path, sizeof(file_path), "www/index.html");
         } else {
-            // Usar snprintf em vez de sprintf para segurança
             snprintf(file_path, sizeof(file_path), "www%s", req.path);
         }
-    
-    // ... (resto do código) ...
 
+        // 1. Verificar Cache
         cache_entry_t* cached_entry = NULL;
         if (pool->cache) {
             cached_entry = cache_get(pool->cache, file_path);
         }
 
         if (cached_entry) {
+            // CACHE HIT
             printf("[Thread] CACHE HIT: %s\n", file_path);
-            is_cache_hit = 1; // Marcar como Hit
+            is_cache_hit = 1; 
             bytes_sent = cached_entry->size;
             status = 200;
             
@@ -134,8 +129,11 @@ void handle_client(thread_pool_t* pool, int client_fd) {
             }
         } 
         else {
+            // CACHE MISS - Tentar ler do disco
             FILE* file = fopen(file_path, "rb");
+            
             if (file) {
+                // Ficheiro existe e abriu com sucesso
                 fseek(file, 0, SEEK_END);
                 long fsize = ftell(file);
                 fseek(file, 0, SEEK_SET);
@@ -152,6 +150,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                         
                         send_http_response(client_fd, 200, "OK", get_mime_type(file_path), body, bytes_sent);
                         
+                        // Guardar na cache se for pequeno
                         if (pool->cache && read_bytes < 1024 * 1024) {
                             cache_put(pool->cache, file_path, body, read_bytes);
                         }
@@ -160,16 +159,16 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                 }
                 fclose(file);
             } else {
-                // Passamos req_path para logging dentro da função de erro se necessário, 
-                // mas aqui a função send_error_page_file já chama update_stats internamente? 
-                // CUIDADO: A tua função send_error_page_file original chamava update_stats.
-                // Como alterámos a assinatura de update_stats, tens de atualizar essa função também 
-                // OU (mais simples) remover as chamadas de update_stats de dentro de send_error_page_file
-                // e deixar apenas esta chamada final aqui.
-                
-                // Para simplificar, assume que a chamada update_stats é feita APENAS no fim desta função.
-                send_error_page_file(client_fd, 404, "Not Found", "www/errors/404.html", shm, sems, req_path);
-                status = 404;
+                // Ficheiro não abriu - Verificar errno para distinguir 403 de 404
+                if (errno == EACCES) {
+                    // Permissão negada -> 403 Forbidden
+                    send_error_page_file(client_fd, 403, "Forbidden", "www/errors/403.html", shm, sems, req_path);
+                    status = 403;
+                } else {
+                    // Não encontrado (ou outro erro) -> 404 Not Found
+                    send_error_page_file(client_fd, 404, "Not Found", "www/errors/404.html", shm, sems, req_path);
+                    status = 404;
+                }
             }
         }
     }
