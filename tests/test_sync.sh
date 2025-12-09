@@ -47,7 +47,6 @@ echo ""
 # Iniciar servidor com Helgrind em background
 valgrind --tool=helgrind \
          --log-file=helgrind_output.log \
-         --suppressions=/usr/lib/valgrind/default.supp \
          ./server &
 
 SERVER_PID=$!

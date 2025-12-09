@@ -10,10 +10,10 @@ void log_request(sem_t* log_sem, const char* client_ip,
                  int status, size_t bytes) {
     
     time_t now = time(NULL);
-    struct tm* tm_info = localtime(&now);
+    struct tm tm_info;
+    localtime_r(&now, &tm_info);
     char timestamp[64];
-    // Formato exigido: [DD/Month/YYYY:HH:MM:SS +0000]
-    strftime(timestamp, sizeof(timestamp), "%d/%b/%Y:%H:%M:%S %z", tm_info);
+    strftime(timestamp, sizeof(timestamp), "%d/%b/%Y:%H:%M:%S %z", &tm_info);
 
     // 1. ADQUIRIR O SEMÁFORO (Exclusão Mútua IPC)
     sem_wait(log_sem);
