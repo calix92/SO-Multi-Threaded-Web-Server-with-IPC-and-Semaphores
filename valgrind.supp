@@ -1,0 +1,12 @@
+{
+   pthread_create_leak
+   Memcheck:Leak
+   ...
+   fun:pthread_create*
+}
+{
+   dl_init_leak
+   Memcheck:Leak
+   ...
+   fun:_dl_init
+}
