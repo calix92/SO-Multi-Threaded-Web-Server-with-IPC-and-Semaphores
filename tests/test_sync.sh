@@ -1,5 +1,5 @@
 #!/bin/bash
-# tests/test_sync.sh - VERSÃO FINAL (Sem bloqueio no wait)
+# tests/test_sync.sh
 # Testes de Sincronização com Valgrind Helgrind
 
 GREEN='\033[0;32m'
@@ -86,7 +86,6 @@ for i in {1..20}; do
 done
 
 echo "A aguardar que os pedidos terminem..."
-# REMOVIDO O 'wait' QUE BLOQUEAVA TUDO
 sleep 5 
 
 echo -e "${BLUE}>> A terminar o servidor...${NC}"
@@ -113,12 +112,12 @@ echo "Erros de Lock Order: $LOCK_ERRORS"
 echo ""
 
 if [ $ERRORS -eq 0 ] && [ $LOCK_ERRORS -eq 0 ]; then
-    echo -e "${GREEN}✓ PASS: Nenhuma race condition detetada!${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Nenhuma race condition detetada!${NC}"
     if grep -q "failed with error code 4" helgrind_output.log; then
         echo -e "${YELLOW}(Nota: Erro 'EINTR' ignorado - normal no shutdown)${NC}"
     fi
 else
-    echo -e "${RED}✗ FAIL: Problemas de sincronização encontrados.${NC}"
+    echo -e "${RED}[ERROR] FAIL: Problemas de sincronização encontrados.${NC}"
     echo "Detalhes (top 10):"
     grep -A 5 "Possible data race" helgrind_output.log | head -20
 fi

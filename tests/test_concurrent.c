@@ -223,11 +223,11 @@ int test_concurrent_requests() {
                           (global_stats.successful_requests + global_stats.failed_requests);
     
     if (success_rate >= 0.95) {
-        printf(COLOR_GREEN "✓ PASS: Taxa de sucesso %.1f%%\n" COLOR_RESET, 
+        printf(COLOR_GREEN "[ OK ] PASS: Taxa de sucesso %.1f%%\n" COLOR_RESET, 
                success_rate * 100);
         return 0;
     } else {
-        printf(COLOR_RED "✗ FAIL: Taxa de sucesso %.1f%% (esperado >= 95%%)\n" COLOR_RESET, 
+        printf(COLOR_RED "[ERROR] FAIL: Taxa de sucesso %.1f%% (esperado >= 95%%)\n" COLOR_RESET, 
                success_rate * 100);
         return -1;
     }
@@ -266,10 +266,10 @@ int test_burst_requests() {
            (double)successful / (duration_ms / 1000.0));
 
     if (successful >= 190) { // 95% de sucesso
-        printf(COLOR_GREEN "✓ PASS\n" COLOR_RESET);
+        printf(COLOR_GREEN "[ OK ] PASS\n" COLOR_RESET);
         return 0;
     } else {
-        printf(COLOR_RED "✗ FAIL: Muitos pedidos falharam\n" COLOR_RESET);
+        printf(COLOR_RED "[ERROR] FAIL: Muitos pedidos falharam\n" COLOR_RESET);
         return -1;
     }
 }
@@ -287,7 +287,7 @@ int test_cache_effectiveness() {
     // Primeiro pedido (cache miss)
     printf("  Pedido 1 (cache miss)...\n");
     if (send_http_request("/index.html", &first_request_time) != 0) {
-        printf(COLOR_RED "✗ FAIL: Primeiro pedido falhou\n" COLOR_RESET);
+        printf(COLOR_RED "[ERROR] FAIL: Primeiro pedido falhou\n" COLOR_RESET);
         return -1;
     }
     printf("    Tempo: %ld ms\n", first_request_time);
@@ -297,7 +297,7 @@ int test_cache_effectiveness() {
     for (int i = 0; i < 5; i++) {
         printf("  Pedido %d (cache hit)...\n", i + 2);
         if (send_http_request("/index.html", &cached_request_times[i]) != 0) {
-            printf(COLOR_RED "✗ FAIL: Pedido %d falhou\n" COLOR_RESET, i + 2);
+            printf(COLOR_RED "[ERROR] FAIL: Pedido %d falhou\n" COLOR_RESET, i + 2);
             return -1;
         }
         printf("    Tempo: %ld ms\n", cached_request_times[i]);
@@ -318,10 +318,10 @@ int test_cache_effectiveness() {
     if (avg_cached_time < first_request_time * 0.8) {
         double improvement = ((double)(first_request_time - avg_cached_time) / 
                              first_request_time) * 100;
-        printf(COLOR_GREEN "✓ PASS: Cache %.1f%% mais rápida\n" COLOR_RESET, improvement);
+        printf(COLOR_GREEN "[ OK ] PASS: Cache %.1f%% mais rápida\n" COLOR_RESET, improvement);
         return 0;
     } else {
-        printf(COLOR_YELLOW "⚠ AVISO: Cache não mostrou melhoria significativa\n" COLOR_RESET);
+        printf(COLOR_YELLOW "! AVISO: Cache não mostrou melhoria significativa\n" COLOR_RESET);
         printf("  (Isto pode ser normal se os ficheiros forem muito pequenos)\n");
         return 0; // Não falhar o teste, apenas avisar
     }
@@ -332,9 +332,9 @@ int test_cache_effectiveness() {
 // ================================================
 int main() {
     printf("\n");
-    printf("╔════════════════════════════════════════════════════╗\n");
-    printf("║     TESTES DE CONCORRÊNCIA - ConcurrentHTTP       ║\n");
-    printf("╚════════════════════════════════════════════════════╝\n");
+    printf("==============================================\n");
+    printf("    TESTES DE CONCORRENCIA - ConcurrentHTTP   \n");
+    printf("==============================================\n");
     printf("\n");
 
     // Verificar se servidor está online
@@ -347,7 +347,7 @@ int main() {
         printf("Execute './server' noutra terminal primeiro.\n");
         return 1;
     }
-    printf(COLOR_GREEN "✓ Servidor online!\n" COLOR_RESET);
+    printf(COLOR_GREEN "[ OK ] Servidor online!\n" COLOR_RESET);
     printf("\n");
 
     // Executar testes
@@ -360,19 +360,19 @@ int main() {
 
     // Resumo final
     printf("\n");
-    printf("╔════════════════════════════════════════════════════╗\n");
-    printf("║              RESUMO DOS TESTES                     ║\n");
-    printf("╚════════════════════════════════════════════════════╝\n");
+    printf("==============================================\n");
+    printf("              RESUMO DOS TESTES               \n");
+    printf("==============================================\n");
     printf("\n");
     printf("Testes passados: " COLOR_GREEN "%d" COLOR_RESET "\n", tests_passed);
     printf("Testes falhados: " COLOR_RED "%d" COLOR_RESET "\n", tests_failed);
     printf("\n");
 
     if (tests_failed == 0) {
-        printf(COLOR_GREEN "✓✓✓ TODOS OS TESTES DE CONCORRÊNCIA PASSARAM!\n" COLOR_RESET);
+        printf(COLOR_GREEN ":) TODOS OS TESTES DE CONCORRÊNCIA PASSARAM!\n" COLOR_RESET);
         return 0;
     } else {
-        printf(COLOR_RED "✗✗✗ ALGUNS TESTES FALHARAM!\n" COLOR_RESET);
+        printf(COLOR_RED ":( ALGUNS TESTES FALHARAM!\n" COLOR_RESET);
         return 1;
     }
 }

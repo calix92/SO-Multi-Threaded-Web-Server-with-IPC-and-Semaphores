@@ -1,5 +1,5 @@
 #!/bin/bash
-# tests/test_memory.sh - VERSÃO CORRIGIDA (Sem bloqueio no wait)
+# tests/test_memory.sh
 # Testes de Memória com Valgrind (Memory Leaks)
 
 GREEN='\033[0;32m'
@@ -27,7 +27,7 @@ if [ ! -f "./server" ]; then
     exit 1
 fi
 
-echo -e "${YELLOW}⚠ AVISO: Valgrind adiciona overhead (servidor será ~20x mais lento)${NC}"
+echo -e "${YELLOW}! AVISO: Valgrind adiciona overhead (servidor será ~20x mais lento)${NC}"
 echo ""
 
 # Limpar recursos IPC antigos
@@ -74,7 +74,7 @@ sleep 10
 
 # Verificar se o servidor está a correr
 if ! kill -0 $SERVER_PID 2>/dev/null; then
-    echo -e "${RED}✗ FAIL: Servidor crashou durante arranque!${NC}"
+    echo -e "${RED}[ERROR] FAIL: Servidor crashou durante arranque!${NC}"
     cat valgrind_memory.log
     exit 1
 fi
@@ -87,19 +87,19 @@ for i in {1..50}; do
     # Adicionado --max-time 5 para evitar bloqueios
     curl -s --max-time 5 http://localhost:8080/index.html > /dev/null &
 done
-sleep 5 # Substituído wait por sleep
+sleep 5
 
 echo "   Fase 2: 50 pedidos CSS"
 for i in {1..50}; do
     curl -s --max-time 5 http://localhost:8080/style.css > /dev/null &
 done
-sleep 5 # Substituído wait por sleep
+sleep 5
 
 echo "   Fase 3: 30 pedidos 404"
 for i in {1..30}; do
     curl -s --max-time 5 http://localhost:8080/nao_existe.html > /dev/null &
 done
-sleep 5 # Substituído wait por sleep
+sleep 5
 
 echo "   Tráfego completo. Aguardando processamento final..."
 sleep 5
@@ -107,7 +107,7 @@ sleep 5
 # Parar o servidor gracefully
 echo ">> A parar o servidor (SIGINT)..."
 kill -SIGINT $SERVER_PID
-# Agora sim, esperamos ESPECIFICAMENTE pelo PID do servidor para garantir que o Valgrind guarda o log
+# Esperamos ESPECIFICAMENTE pelo PID do servidor para garantir que o Valgrind guarda o log
 wait $SERVER_PID 2>/dev/null 
 
 echo "   Servidor parado."
@@ -149,13 +149,13 @@ echo ""
 CRITICAL_LEAKS=$((${DEFINITELY_LOST:-0} + ${INDIRECTLY_LOST:-0}))
 
 if [ $CRITICAL_LEAKS -eq 0 ]; then
-    echo -e "${GREEN}✓ PASS: Sem memory leaks críticos!${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Sem memory leaks críticos!${NC}"
     if [ ${POSSIBLY_LOST:-0} -gt 0 ]; then
-        echo -e "${YELLOW}⚠ AVISO: ${POSSIBLY_LOST} bytes possibly lost (pode ser falso positivo)${NC}"
+        echo -e "${YELLOW}! AVISO: ${POSSIBLY_LOST} bytes possibly lost (pode ser falso positivo)${NC}"
     fi
     MEMCHECK_PASS=1
 else
-    echo -e "${RED}✗ FAIL: $CRITICAL_LEAKS bytes de memory leaks!${NC}"
+    echo -e "${RED}[ERROR] FAIL: $CRITICAL_LEAKS bytes de memory leaks!${NC}"
     echo ""
     echo "Detalhes dos leaks:"
     grep -A 20 "definitely lost\|indirectly lost" valgrind_memory.log | head -50
@@ -184,10 +184,10 @@ echo ""
 TOTAL_INVALID=$((INVALID_READS + INVALID_WRITES + USE_OF_UNINIT))
 
 if [ $TOTAL_INVALID -eq 0 ]; then
-    echo -e "${GREEN}✓ PASS: Sem acessos inválidos à memória!${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Sem acessos inválidos à memória!${NC}"
     INVALID_PASS=1
 else
-    echo -e "${RED}✗ FAIL: $TOTAL_INVALID problemas de acesso à memória!${NC}"
+    echo -e "${RED}[ERROR] FAIL: $TOTAL_INVALID problemas de acesso à memória!${NC}"
     echo ""
     echo "Primeiros erros:"
     grep -B 2 -A 5 "Invalid read\|Invalid write\|uninitialised" valgrind_memory.log | head -30
@@ -213,10 +213,10 @@ echo "  - Semáforos (sem.ws_*): $SEM_FILES"
 echo ""
 
 if [ $SHM_FILES -eq 0 ] && [ $SEM_FILES -eq 0 ]; then
-    echo -e "${GREEN}✓ PASS: Recursos IPC limpos corretamente!${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Recursos IPC limpos corretamente!${NC}"
     CLEANUP_PASS=1
 else
-    echo -e "${YELLOW}⚠ AVISO: Recursos IPC ainda presentes (pode ser do teste anterior)${NC}"
+    echo -e "${YELLOW}! AVISO: Recursos IPC ainda presentes (pode ser do teste anterior)${NC}"
     # Limpar agora
     rm -f /dev/shm/ws_* /dev/shm/sem.ws_* 2>/dev/null || true
     echo "  Recursos limpos manualmente."
@@ -272,10 +272,10 @@ wait $SERVER_PID 2>/dev/null
 # Avaliar
 # Crescimento aceitável: < 50MB (51200 KB)
 if [ $MEM_GROWTH -lt 51200 ]; then
-    echo -e "${GREEN}✓ PASS: Crescimento de memória aceitável (<50MB)${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Crescimento de memória aceitável (<50MB)${NC}"
     STRESS_MEM_PASS=1
 else
-    echo -e "${YELLOW}⚠ AVISO: Crescimento de memória elevado (${MEM_GROWTH} KB)${NC}"
+    echo -e "${YELLOW}! AVISO: Crescimento de memória elevado (${MEM_GROWTH} KB)${NC}"
     echo "  Isto pode indicar memory leaks acumulados."
     STRESS_MEM_PASS=0
 fi
@@ -297,35 +297,35 @@ echo "Testes passados: $PASSED_TESTS/$TOTAL_TESTS"
 echo ""
 
 if [ $MEMCHECK_PASS -eq 1 ]; then
-    echo -e "${GREEN}✓${NC} Valgrind Leak Check: Sem leaks críticos"
+    echo -e "${GREEN}[ OK ]${NC} Valgrind Leak Check: Sem leaks críticos"
 else
-    echo -e "${RED}✗${NC} Valgrind Leak Check: Memory leaks detetados"
+    echo -e "${RED}[FAIL]${NC} Valgrind Leak Check: Memory leaks detetados"
 fi
 
 if [ $INVALID_PASS -eq 1 ]; then
-    echo -e "${GREEN}✓${NC} Invalid Access: Sem acessos inválidos"
+    echo -e "${GREEN}[ OK ]${NC} Invalid Access: Sem acessos inválidos"
 else
-    echo -e "${RED}✗${NC} Invalid Access: Problemas detetados"
+    echo -e "${RED}[FAIL]${NC} Invalid Access: Problemas detetados"
 fi
 
 if [ $CLEANUP_PASS -eq 1 ]; then
-    echo -e "${GREEN}✓${NC} IPC Cleanup: Recursos limpos"
+    echo -e "${GREEN}[ OK ]${NC} IPC Cleanup: Recursos limpos"
 else
-    echo -e "${RED}✗${NC} IPC Cleanup: Recursos não limpos"
+    echo -e "${RED}[FAIL]${NC} IPC Cleanup: Recursos não limpos"
 fi
 
 if [ $STRESS_MEM_PASS -eq 1 ]; then
-    echo -e "${GREEN}✓${NC} Memory Growth: Crescimento aceitável"
+    echo -e "${GREEN}[ OK ]${NC} Memory Growth: Crescimento aceitável"
 else
-    echo -e "${YELLOW}⚠${NC} Memory Growth: Crescimento elevado"
+    echo -e "${YELLOW}!${NC} Memory Growth: Crescimento elevado"
 fi
 
 echo ""
 
 if [ $PASSED_TESTS -ge 3 ]; then
-    echo -e "${GREEN}✓✓✓ TESTES DE MEMÓRIA CONCLUÍDOS COM SUCESSO!${NC}"
+    echo -e "${GREEN}:) TESTES DE MEMÓRIA CONCLUÍDOS COM SUCESSO!${NC}"
     exit 0
 else
-    echo -e "${RED}✗✗✗ PROBLEMAS DE MEMÓRIA DETETADOS!${NC}"
+    echo -e "${RED}:( PROBLEMAS DE MEMÓRIA DETETADOS!${NC}"
     exit 1
 fi

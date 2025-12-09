@@ -8,7 +8,7 @@ Um servidor web HTTP/1.1 de nível de produção, implementado em C, utilizando 
 
 * **Diogo Ruivo** (NMec: 126498) - [diogo.ruivo@ua.pt]
 * **David Cálix** (NMec: 125043) - [davidcalix@ua.pt]
-* **Turma:** [P1, P2, etc.] | **Grupo:** [G1, G2...]
+* **Turma:** P2 | **Grupo:** G7
 
 ---
 

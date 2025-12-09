@@ -50,9 +50,9 @@ FAILED1=$(grep "Failed requests:" /tmp/ab_test1.log | awk '{print $3}')
 RPS1=$(grep "Requests per second:" /tmp/ab_test1.log | awk '{print $4}')
 
 if [ "$FAILED1" = "0" ]; then
-    echo -e "${GREEN}✓ PASS: Sem falhas ($RPS1 req/sec)${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Sem falhas ($RPS1 req/sec)${NC}"
 else
-    echo -e "${RED}✗ FAIL: $FAILED1 pedidos falharam (ou timeout)!${NC}"
+    echo -e "${RED}[ERROR] FAIL: $FAILED1 pedidos falharam (ou timeout)!${NC}"
 fi
 echo ""
 
@@ -67,9 +67,9 @@ FAILED2=$(grep "Failed requests:" /tmp/ab_test2.log | awk '{print $3}')
 RPS2=$(grep "Requests per second:" /tmp/ab_test2.log | awk '{print $4}')
 
 if [ "$FAILED2" = "0" ]; then
-    echo -e "${GREEN}✓ PASS: Sem falhas ($RPS2 req/sec)${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Sem falhas ($RPS2 req/sec)${NC}"
 else
-    echo -e "${RED}✗ FAIL: $FAILED2 pedidos falharam!${NC}"
+    echo -e "${RED}[ERROR] FAIL: $FAILED2 pedidos falharam!${NC}"
 fi
 echo ""
 
@@ -77,24 +77,24 @@ echo ""
 # TESTE 3: Carga Pesada (Stress)
 # ==========================================
 echo -e "${BLUE}TESTE 3: Carga Pesada (10k req / 100 conc)${NC}"
-echo -e "${YELLOW}⚠ Aguarde (max 60s)...${NC}"
+echo -e "${YELLOW}! Aguarde (max 60s)...${NC}"
 
-# Timeout de 20s. Se o servidor estiver lento, o ab corta o teste e mostra stats parciais
+# Timeout de 60s. Se o servidor estiver lento, o ab corta o teste e mostra stats parciais
 ab -t 60 -n 10000 -c 100 "$SERVER_URL/index.html" > /tmp/ab_test3.log 2>&1
 
 FAILED3=$(grep "Failed requests:" /tmp/ab_test3.log | awk '{print $3}')
 RPS3=$(grep "Requests per second:" /tmp/ab_test3.log | awk '{print $4}')
 
 if [ "$FAILED3" = "0" ]; then
-    echo -e "${GREEN}✓ PASS: Sem falhas ($RPS3 req/sec)${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Sem falhas ($RPS3 req/sec)${NC}"
 else
     # Verifica se foi timeout (Requests completed < Total)
     COMPLETED=$(grep "Complete requests:" /tmp/ab_test3.log | awk '{print $3}')
     if [ "$COMPLETED" != "10000" ]; then
-         echo -e "${YELLOW}⚠ AVISO: Teste cortado por timeout ($COMPLETED/10000 feitos).${NC}"
+         echo -e "${YELLOW}! AVISO: Teste cortado por timeout ($COMPLETED/10000 feitos).${NC}"
          echo -e "${YELLOW}         Servidor pode estar lento ou em deadlock.${NC}"
     else
-         echo -e "${RED}✗ FAIL: $FAILED3 pedidos falharam!${NC}"
+         echo -e "${RED}[ERROR] FAIL: $FAILED3 pedidos falharam!${NC}"
     fi
 fi
 echo ""
@@ -123,9 +123,9 @@ FAILED_JS=$(grep "Failed requests:" /tmp/ab_js.log | awk '{print $3}')
 TOTAL_FAIL=$(( ${FAILED_HTML:-0} + ${FAILED_CSS:-0} + ${FAILED_JS:-0} ))
 
 if [ $TOTAL_FAIL -eq 0 ]; then
-    echo -e "${GREEN}✓ PASS: Mix completo sem falhas!${NC}"
+    echo -e "${GREEN}[ OK ] PASS: Mix completo sem falhas!${NC}"
 else
-    echo -e "${RED}✗ FAIL: $TOTAL_FAIL falhas no total.${NC}"
+    echo -e "${RED}[ERROR] FAIL: $TOTAL_FAIL falhas no total.${NC}"
 fi
 echo ""
 
@@ -138,7 +138,7 @@ ab -t 10 -n 1000 -c 20 -k "$SERVER_URL/index.html" > /tmp/ab_keepalive.log 2>&1
 RPS_KA=$(grep "Requests per second:" /tmp/ab_keepalive.log | awk '{print $4}')
 
 echo "  Performance Keep-Alive: $RPS_KA req/sec"
-echo -e "${GREEN}✓ Teste concluído.${NC}"
+echo -e "${GREEN}[ OK ] Teste concluído.${NC}"
 echo ""
 
 # ==========================================

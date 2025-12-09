@@ -19,10 +19,10 @@ echo ""
 # Função auxiliar para imprimir resultado
 print_result() {
     if [ $1 -eq 0 ]; then
-        echo -e "${GREEN}[✓ PASS]${NC} $2"
+        echo -e "${GREEN}[PASS]${NC} $2"
         ((PASSED++))
     else
-        echo -e "${RED}[✗ FAIL]${NC} $2"
+        echo -e "${RED}[FAIL]${NC} $2"
         ((FAILED++))
     fi
 }
@@ -184,9 +184,9 @@ echo -e "${RED}Falhou: $FAILED${NC}"
 echo ""
 
 if [ $FAILED -eq 0 ]; then
-    echo -e "${GREEN}✓ Todos os testes funcionais passaram!${NC}"
+    echo -e "${GREEN}:) Todos os testes funcionais passaram!${NC}"
     exit 0
 else
-    echo -e "${RED}✗ Alguns testes falharam. Verifique os logs.${NC}"
+    echo -e "${RED}:( Alguns testes falharam. Verifique os logs.${NC}"
     exit 1
 fi
