@@ -1,4 +1,4 @@
-// src/thread_pool.c - CÓDIGO COMPLETO
+// src/thread_pool.c
 #include "thread_pool.h"
 #include "http.h"
 #include "cache.h"
@@ -13,6 +13,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <time.h> // Necessário para time()
 
 // Função auxiliar para determinar o MIME type
 const char* get_mime_type(const char* filename) {
@@ -57,7 +58,6 @@ void send_error_page_file(int fd, int status, const char* status_msg, const char
         free(body);
     }
     fclose(file);
-
 }
 
 void handle_client(thread_pool_t* pool, int client_fd) {
@@ -100,6 +100,87 @@ void handle_client(thread_pool_t* pool, int client_fd) {
         status = 400;
         send_http_response(client_fd, status, "Bad Request", "text/html", NULL, 0);
     } else {
+        
+        // ============================================================
+        //  DASHBOARD REAL-TIME (/stats) - FEATURE EXTRA (+5 pontos)
+        // ============================================================
+        if (strcmp(req.path, "/stats") == 0) {
+            sem_wait(sems->stats_mutex); // Leitura segura dos dados partilhados
+
+            time_t now = time(NULL);
+            long uptime = now - shm->stats.start_time;
+
+            double avg_time = 0;
+            if (shm->stats.total_requests > 0)
+                avg_time = (double)shm->stats.total_response_time_ms / shm->stats.total_requests;
+
+            // Construir HTML da dashboard
+            char body[8192]; 
+            int body_len = snprintf(body, sizeof(body),
+                "<!DOCTYPE html>"
+                "<html lang='en'><head><meta charset='UTF-8'><title>Server Dashboard</title>"
+                "<style>"
+                "body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f0f2f5; color: #333; }"
+                ".container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }"
+                "h1 { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2c3e50; }"
+                ".grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-top: 20px; }"
+                ".card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #e9ecef; }"
+                ".value { font-size: 24px; font-weight: bold; color: #3498db; display: block; margin-bottom: 5px; }"
+                ".label { font-size: 14px; color: #6c757d; text-transform: uppercase; letter-spacing: 1px; }"
+                ".status-list { list-style: none; padding: 0; margin-top: 20px; }"
+                ".status-list li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }"
+                ".footer { margin-top: 30px; text-align: center; font-size: 12px; color: #aaa; }"
+                "</style>"
+                "<meta http-equiv='refresh' content='3'>" // Auto-refresh a cada 3s
+                "</head><body>"
+                "<div class='container'>"
+                "<h1>Server Real-Time Dashboard</h1>"
+                "<div class='grid'>"
+                "  <div class='card'><span class='value'>%lds</span><span class='label'>Uptime</span></div>"
+                "  <div class='card'><span class='value'>%d</span><span class='label'>Active Conn</span></div>"
+                "  <div class='card'><span class='value'>%ld</span><span class='label'>Total Req</span></div>"
+                "  <div class='card'><span class='value'>%.2f ms</span><span class='label'>Avg Latency</span></div>"
+                "  <div class='card'><span class='value'>%ld</span><span class='label'>Total Bytes</span></div>"
+                "  <div class='card'><span class='value'>%ld</span><span class='label'>Cache Hits</span></div>"
+                "</div>"
+                "<h3>HTTP Status Breakdown</h3>"
+                "<ul class='status-list'>"
+                "<li><span>200 OK</span> <strong>%ld</strong></li>"
+                "<li><span>403 Forbidden</span> <strong>%ld</strong></li>"
+                "<li><span>404 Not Found</span> <strong>%ld</strong></li>"
+                "<li><span>500 Internal Error</span> <strong>%ld</strong></li>"
+                "</ul>"
+                "<div class='footer'>ConcurrentHTTP Server v1.0 | Updated: Automatic (3s)</div>"
+                "</div></body></html>",
+                uptime,
+                shm->stats.active_connections,
+                shm->stats.total_requests,
+                avg_time,
+                shm->stats.bytes_transferred,
+                shm->stats.cache_hits,
+                shm->stats.status_200,
+                shm->stats.status_403,
+                shm->stats.status_404,
+                shm->stats.status_500
+            );
+
+            sem_post(sems->stats_mutex); // Libertar mutex
+
+            send_http_response(client_fd, 200, "OK", "text/html", body, body_len);
+            
+            // Logar o pedido das estatísticas
+            log_request(sems->log_mutex, "127.0.0.1", req.method, "/stats", 200, body_len);
+            
+            // Decrementar conexão ativa antes de sair
+            sem_wait(sems->stats_mutex);
+            shm->stats.active_connections--;
+            sem_post(sems->stats_mutex);
+
+            close(client_fd);
+            return; // Sair para não tentar ler ficheiros do disco
+        }
+        // ============================================================
+
         strcpy(req_path, req.path);
         
         // Construção segura do caminho do ficheiro
@@ -112,7 +193,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
         }
 
         // ---------------------------------------------------------
-        // 1. Verificar Cache (VERSÃO SEGURA CORRIGIDA)
+        // 1. Verificar Cache
         // ---------------------------------------------------------
         size_t cache_size = 0;
         void* cache_data = NULL; // Ponteiro para a CÓPIA dos dados
