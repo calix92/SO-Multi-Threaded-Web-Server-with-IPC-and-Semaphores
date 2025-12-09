@@ -24,7 +24,7 @@ const char* get_mime_type(const char* filename) {
     if (strcmp(dot, ".png") == 0) return "image/png";
     if (strcmp(dot, ".jpg") == 0) return "image/jpeg";
     if (strcmp(dot, ".gif") == 0) return "image/gif";
-    if (strcmp(dot, ".pdf") == 0) return "application/pff";
+    if (strcmp(dot, ".pdf") == 0) return "application/pdf";
 
     return "text/plain";
 }
