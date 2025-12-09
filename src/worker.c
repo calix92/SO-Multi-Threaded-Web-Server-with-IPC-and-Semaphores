@@ -11,6 +11,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <errno.h>
+#include <string.h>
 
 // ✅ CORREÇÃO 1: Usar atomic para acesso thread-safe
 #include <stdatomic.h>
