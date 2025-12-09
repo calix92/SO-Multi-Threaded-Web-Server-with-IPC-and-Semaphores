@@ -1,0 +1,877 @@
+==9070== Helgrind, a thread error detector
+==9070== Copyright (C) 2007-2017, and GNU GPL'd, by OpenWorks LLP et al.
+==9070== Using Valgrind-3.22.0 and LibVEX; rerun with -h for copyright info
+==9070== Command: ./server
+==9070== Parent PID: 9058
+==9070== 
+==9075== ---Thread-Announcement------------------------------------------
+==9075== 
+==9075== Thread #2 was created
+==9075==    at 0x499BA53: clone (clone.S:76)
+==9075==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9075==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9075==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9075==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9075==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075== 
+==9075== ---Thread-Announcement------------------------------------------
+==9075== 
+==9075== Thread #3 was created
+==9075==    at 0x499BA53: clone (clone.S:76)
+==9075==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9075==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9075==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9075==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9075==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during read of size 1 at 0x4A8A56A by thread #2
+==9075== Locks held: none
+==9075==    at 0x4857276: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4952484: __tzstring (tzset.c:121)
+==9075==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9075==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Address 0x4a8a56a is 2,138 bytes inside a block of size 2,182 alloc'd
+==9075==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9075==    by 0x495279B: tzset_internal (tzset.c:405)
+==9075==    by 0x495318A: __tz_convert (tzset.c:577)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Block was alloc'd by thread #3
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during read of size 1 at 0x4A8A56B by thread #2
+==9075== Locks held: none
+==9075==    at 0x4857284: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4952484: __tzstring (tzset.c:121)
+==9075==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9075==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Address 0x4a8a56b is 2,139 bytes inside a block of size 2,182 alloc'd
+==9075==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9075==    by 0x495279B: tzset_internal (tzset.c:405)
+==9075==    by 0x495318A: __tz_convert (tzset.c:577)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Block was alloc'd by thread #3
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during read of size 1 at 0x4A89720 by thread #2
+==9075== Locks held: none
+==9075==    at 0x4859FED: bcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4951D78: __tzstring_len (tzset.c:93)
+==9075==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9075==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Address 0x4a89720 is 16 bytes inside a block of size 20 alloc'd
+==9075==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4951DF8: __tzstring_len (tzset.c:98)
+==9075==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9075==    by 0x495279B: tzset_internal (tzset.c:405)
+==9075==    by 0x495318A: __tz_convert (tzset.c:577)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Block was alloc'd by thread #3
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during read of size 1 at 0x4A8A565 by thread #2
+==9075== Locks held: none
+==9075==    at 0x4857276: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4952484: __tzstring (tzset.c:121)
+==9075==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9075==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Address 0x4a8a565 is 2,133 bytes inside a block of size 2,182 alloc'd
+==9075==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9075==    by 0x495279B: tzset_internal (tzset.c:405)
+==9075==    by 0x495318A: __tz_convert (tzset.c:577)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Block was alloc'd by thread #3
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during read of size 1 at 0x4A8A566 by thread #2
+==9075== Locks held: none
+==9075==    at 0x4857284: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4952484: __tzstring (tzset.c:121)
+==9075==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9075==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Address 0x4a8a566 is 2,134 bytes inside a block of size 2,182 alloc'd
+==9075==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9075==    by 0x495279B: tzset_internal (tzset.c:405)
+==9075==    by 0x495318A: __tz_convert (tzset.c:577)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Block was alloc'd by thread #3
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during read of size 1 at 0x4A89780 by thread #2
+==9075== Locks held: none
+==9075==    at 0x4859FED: bcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4951D78: __tzstring_len (tzset.c:93)
+==9075==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9075==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Address 0x4a89780 is 16 bytes inside a block of size 21 alloc'd
+==9075==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4951D94: __tzstring_len (tzset.c:98)
+==9075==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9075==    by 0x495279B: tzset_internal (tzset.c:405)
+==9075==    by 0x495318A: __tz_convert (tzset.c:577)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Block was alloc'd by thread #3
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during read of size 1 at 0x4A897E3 by thread #2
+==9075== Locks held: none
+==9075==    at 0x4857EB0: strcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x49545AF: __tzfile_compute (tzfile.c:752)
+==9075==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Address 0x4a897e3 is 19 bytes inside a block of size 20 alloc'd
+==9075==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x4951D94: __tzstring_len (tzset.c:98)
+==9075==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9075==    by 0x495279B: tzset_internal (tzset.c:405)
+==9075==    by 0x495318A: __tz_convert (tzset.c:577)
+==9075==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075==  Block was alloc'd by thread #3
+==9075== 
+==9074== ---Thread-Announcement------------------------------------------
+==9074== 
+==9074== Thread #5 was created
+==9074==    at 0x499BA53: clone (clone.S:76)
+==9074==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9074==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9074==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9074==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9074==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== ---Thread-Announcement------------------------------------------
+==9074==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== 
+==9074==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== Thread #3 was created
+==9074==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== 
+==9074== ---Thread-Announcement------------------------------------------
+==9074== 
+==9074== Thread #4 was created
+==9074==    at 0x499BA53: clone (clone.S:76)
+==9074==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9074==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9074==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9074==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9074==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== 
+==9074== ----------------------------------------------------------------
+==9074== 
+==9074== Possible data race during read of size 1 at 0x4A8FDFA by thread #5
+==9074== Locks held: none
+==9074==    at 0x4857276: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x4952484: __tzstring (tzset.c:121)
+==9074==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9074==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9074==  Address 0x4a8fdfa is 2,138 bytes inside a block of size 2,182 alloc'd
+==9074==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9074==    by 0x495279B: tzset_internal (tzset.c:405)
+==9074==    by 0x495318A: __tz_convert (tzset.c:577)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9074==  Block was alloc'd by thread #4
+==9074== 
+==9072==    at 0x499BA53: clone (clone.S:76)
+==9072==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9072==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9072==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9072==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9072==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== ----------------------------------------------------------------
+==9072==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== 
+==9072==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== Possible data race during read of size 1 at 0x4A8FDFB by thread #5
+==9072==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== Locks held: none
+==9072== 
+==9074==    at 0x4857284: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072== ---Thread-Announcement------------------------------------------
+==9074==    by 0x4952484: __tzstring (tzset.c:121)
+==9072== 
+==9074==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9072== Thread #2 was created
+==9074==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9072==    at 0x499BA53: clone (clone.S:76)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==  Address 0x4a8fdfb is 2,139 bytes inside a block of size 2,182 alloc'd
+==9072==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9072==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072== 
+==9074==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072== ----------------------------------------------------------------
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== 
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== Possible data race during read of size 1 at 0x4A8935A by thread #3
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== Locks held: none
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    at 0x4857276: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x4952484: __tzstring (tzset.c:121)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9074==  Block was alloc'd by thread #4
+==9072==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074== 
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Address 0x4a8935a is 2,138 bytes inside a block of size 2,182 alloc'd
+==9072==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9072==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Block was alloc'd by thread #2
+==9074== ----------------------------------------------------------------
+==9072== 
+==9074== 
+==9074== Possible data race during read of size 1 at 0x4A88820 by thread #5
+==9074== Locks held: none
+==9074==    at 0x4859FED: bcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x4951D78: __tzstring_len (tzset.c:93)
+==9074==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9074==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== ----------------------------------------------------------------
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== 
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072== Possible data race during read of size 1 at 0x4A8935B by thread #3
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072== Locks held: none
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    at 0x4857284: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==  Address 0x4a88820 is 16 bytes inside a block of size 20 alloc'd
+==9072==    by 0x4952484: __tzstring (tzset.c:121)
+==9074==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9074==    by 0x4951DF8: __tzstring_len (tzset.c:98)
+==9072==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==  Address 0x4a8935b is 2,139 bytes inside a block of size 2,182 alloc'd
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9074==  Block was alloc'd by thread #4
+==9072==    by 0x495279B: tzset_internal (tzset.c:405)
+==9074== 
+==9072==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Block was alloc'd by thread #2
+==9072== 
+==9074== ----------------------------------------------------------------
+==9074== 
+==9072== ----------------------------------------------------------------
+==9074== Possible data race during read of size 1 at 0x4A8FDF5 by thread #5
+==9072== 
+==9074== Locks held: none
+==9072== Possible data race during read of size 1 at 0x4A88510 by thread #3
+==9074==    at 0x4857276: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072== Locks held: none
+==9074==    by 0x4952484: __tzstring (tzset.c:121)
+==9072==    at 0x4859FED: bcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9072==    by 0x4951D78: __tzstring_len (tzset.c:93)
+==9074==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9072==    by 0x495440E: __tzfile_compute (tzfile.c:712)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==  Address 0x4a8fdf5 is 2,133 bytes inside a block of size 2,182 alloc'd
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9074==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==  Address 0x4a88510 is 16 bytes inside a block of size 20 alloc'd
+==9074==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9072==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x4951DF8: __tzstring_len (tzset.c:98)
+==9074==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x495279B: tzset_internal (tzset.c:405)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x495318A: __tz_convert (tzset.c:577)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==  Block was alloc'd by thread #4
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074== 
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Block was alloc'd by thread #2
+==9072== 
+==9074== ----------------------------------------------------------------
+==9074== 
+==9074== Possible data race during read of size 1 at 0x4A8FDF6 by thread #5
+==9074== Locks held: none
+==9074==    at 0x4857284: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x4952484: __tzstring (tzset.c:121)
+==9074==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9074==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9074==  Address 0x4a8fdf6 is 2,134 bytes inside a block of size 2,182 alloc'd
+==9072== ----------------------------------------------------------------
+==9074==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072== 
+==9074==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9072== Possible data race during read of size 1 at 0x4A89355 by thread #3
+==9074==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072== Locks held: none
+==9074==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    at 0x4857276: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4952484: __tzstring (tzset.c:121)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==  Block was alloc'd by thread #4
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074== 
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Address 0x4a89355 is 2,133 bytes inside a block of size 2,182 alloc'd
+==9072==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9072==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074== ----------------------------------------------------------------
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074== 
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9074== Possible data race during read of size 1 at 0x4A88880 by thread #5
+==9072==  Block was alloc'd by thread #2
+==9074== Locks held: none
+==9072== 
+==9074==    at 0x4859FED: bcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x4951D78: __tzstring_len (tzset.c:93)
+==9074==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9074==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== ----------------------------------------------------------------
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072== 
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072== Possible data race during read of size 1 at 0x4A89356 by thread #3
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072== Locks held: none
+==9074==  Address 0x4a88880 is 16 bytes inside a block of size 21 alloc'd
+==9072==    at 0x4857284: strlen (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x4952484: __tzstring (tzset.c:121)
+==9074==    by 0x4951D94: __tzstring_len (tzset.c:98)
+==9072==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9074==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9072==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==  Address 0x4a89356 is 2,134 bytes inside a block of size 2,182 alloc'd
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==  Block was alloc'd by thread #4
+==9072==    by 0x4953722: __tzfile_read (tzfile.c:280)
+==9074== 
+==9072==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Block was alloc'd by thread #2
+==9072== 
+==9072== ----------------------------------------------------------------
+==9072== 
+==9072== Possible data race during read of size 1 at 0x4A88570 by thread #3
+==9072== Locks held: none
+==9072==    at 0x4859FED: bcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x4951D78: __tzstring_len (tzset.c:93)
+==9074== ----------------------------------------------------------------
+==9072==    by 0x4954466: __tzfile_compute (tzfile.c:722)
+==9074== 
+==9072==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9074== Possible data race during read of size 1 at 0x4A888E3 by thread #5
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== Locks held: none
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    at 0x4857EB0: strcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x49545AF: __tzfile_compute (tzfile.c:752)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==  Address 0x4a88570 is 16 bytes inside a block of size 21 alloc'd
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x4951D94: __tzstring_len (tzset.c:98)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9072==    by 0x495279B: tzset_internal (tzset.c:405)
+==9074==  Address 0x4a888e3 is 19 bytes inside a block of size 20 alloc'd
+==9072==    by 0x495318A: __tz_convert (tzset.c:577)
+==9074==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4951D94: __tzstring_len (tzset.c:98)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9074==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==  Block was alloc'd by thread #2
+==9074==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== 
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9074==  Block was alloc'd by thread #4
+==9074== 
+==9072== ----------------------------------------------------------------
+==9072== 
+==9072== Possible data race during read of size 1 at 0x4A885D3 by thread #3
+==9072== Locks held: none
+==9072==    at 0x4857EB0: strcmp (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x49545AF: __tzfile_compute (tzfile.c:752)
+==9072==    by 0x49531B1: __tz_convert (tzset.c:580)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Address 0x4a885d3 is 19 bytes inside a block of size 20 alloc'd
+==9072==    at 0x48488A8: malloc (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x4951D94: __tzstring_len (tzset.c:98)
+==9072==    by 0x4953EDB: __tzfile_read (tzfile.c:413)
+==9072==    by 0x495279B: tzset_internal (tzset.c:405)
+==9072==    by 0x495318A: __tz_convert (tzset.c:577)
+==9072==    by 0x10B5E4: log_request (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CDBC: handle_client (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10CF0C: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072==  Block was alloc'd by thread #2
+==9072== 
+==9073== ---Thread-Announcement------------------------------------------
+==9072== ---Thread-Announcement------------------------------------------
+==9073== 
+==9072== 
+==9073== Thread #1 is the program's root thread
+==9072== Thread #1 is the program's root thread
+==9073== 
+==9072== 
+==9073== ----------------------------------------------------------------
+==9072== ----------------------------------------------------------------
+==9073== 
+==9072== 
+==9073== Thread #1's call to sem_wait failed
+==9072== Thread #1's call to sem_wait failed
+==9073==    with error code 4 (EINTR: Interrupted system call)
+==9072==    with error code 4 (EINTR: Interrupted system call)
+==9074== ---Thread-Announcement------------------------------------------
+==9072==    at 0x48553A7: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074== 
+==9074== Thread #1 is the program's root thread
+==9074== 
+==9074== ----------------------------------------------------------------
+==9073==    at 0x48553A7: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10D454: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== 
+==9073==    by 0x10D454: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== Thread #1's call to sem_wait failed
+==9072==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    with error code 4 (EINTR: Interrupted system call)
+==9072==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== 
+==9073== 
+==9074==    at 0x48553A7: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10D454: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== 
+==9075== ---Thread-Announcement------------------------------------------
+==9075== 
+==9075== Thread #1 is the program's root thread
+==9075== 
+==9075== ----------------------------------------------------------------
+==9075== 
+==9075== Possible data race during write of size 4 at 0x110014 by thread #2
+==9075== Locks held: none
+==9075==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x48B732F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==9075==    by 0x490AD70: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==9075==    by 0x490AD70: __futex_abstimed_wait_common (futex-internal.c:87)
+==9075==    by 0x490AD70: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==9075==    by 0x490D7EC: __pthread_cond_wait_common (pthread_cond_wait.c:503)
+==9075==    by 0x490D7EC: pthread_cond_wait@@GLIBC_2.3.2 (pthread_cond_wait.c:627)
+==9075==    by 0x4854D21: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x10CE5F: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9075==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9075==    by 0x499BA63: clone (clone.S:100)
+==9075== 
+==9075== This conflicts with a previous write of size 4 by thread #1
+==9075== Locks held: none
+==9075==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10D48B: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9075==  Address 0x110014 is 0 bytes inside data symbol "worker_running"
+==9075== 
+==9074== ---Thread-Announcement------------------------------------------
+==9074== 
+==9074== Thread #2 was created
+==9074==    at 0x499BA53: clone (clone.S:76)
+==9074==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9074==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9074==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9074==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9074==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074== 
+==9074== ----------------------------------------------------------------
+==9074== 
+==9074== Possible data race during write of size 4 at 0x110014 by thread #2
+==9074== Locks held: none
+==9074==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x48B732F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==9074==    by 0x490AD70: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==9074==    by 0x490AD70: __futex_abstimed_wait_common (futex-internal.c:87)
+==9074==    by 0x490AD70: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==9074==    by 0x490D7EC: __pthread_cond_wait_common (pthread_cond_wait.c:503)
+==9074==    by 0x490D7EC: pthread_cond_wait@@GLIBC_2.3.2 (pthread_cond_wait.c:627)
+==9074==    by 0x4854D21: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10CE5F: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9074==    by 0x499BA63: clone (clone.S:100)
+==9074== 
+==9074== This conflicts with a previous write of size 4 by thread #1
+==9074== Locks held: none
+==9074==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x48B732F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==9074==    by 0x490AD70: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==9074==    by 0x490AD70: __futex_abstimed_wait_common (futex-internal.c:87)
+==9074==    by 0x490AD70: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==9074==    by 0x4916FB7: __new_sem_wait_slow64.constprop.0 (sem_waitcommon.c:183)
+==9074==    by 0x48552D6: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9074==    by 0x10D454: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9074==  Address 0x110014 is 0 bytes inside data symbol "worker_running"
+==9074== 
+==9072== ----------------------------------------------------------------
+==9072== 
+==9072== Possible data race during write of size 4 at 0x110014 by thread #2
+==9072== Locks held: none
+==9072==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x48B732F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==9072==    by 0x490AD70: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==9072==    by 0x490AD70: __futex_abstimed_wait_common (futex-internal.c:87)
+==9072==    by 0x490AD70: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==9072==    by 0x490D7EC: __pthread_cond_wait_common (pthread_cond_wait.c:503)
+==9072==    by 0x490D7EC: pthread_cond_wait@@GLIBC_2.3.2 (pthread_cond_wait.c:627)
+==9072==    by 0x4854D21: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10CE5F: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9072==    by 0x499BA63: clone (clone.S:100)
+==9072== 
+==9072== This conflicts with a previous write of size 4 by thread #1
+==9072== Locks held: none
+==9072==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x48B732F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==9072==    by 0x490AD70: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==9073== ---Thread-Announcement------------------------------------------
+==9072==    by 0x490AD70: __futex_abstimed_wait_common (futex-internal.c:87)
+==9073== 
+==9073== Thread #2 was created
+==9072==    by 0x490AD70: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==9073==    at 0x499BA53: clone (clone.S:76)
+==9073==    by 0x499BBD2: __clone_internal_fallback (clone-internal.c:64)
+==9072==    by 0x4916FB7: __new_sem_wait_slow64.constprop.0 (sem_waitcommon.c:183)
+==9073==    by 0x499BBD2: __clone_internal (clone-internal.c:109)
+==9072==    by 0x48552D6: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9073==    by 0x490E54F: create_thread (pthread_create.c:297)
+==9072==    by 0x10D454: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x490F1A4: pthread_create@@GLIBC_2.34 (pthread_create.c:836)
+==9073==    by 0x4854975: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9072==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x10D0BD: create_thread_pool (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x10D42F: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072==  Address 0x110014 is 0 bytes inside data symbol "worker_running"
+==9073==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9072== 
+==9073==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073== 
+==9073== ----------------------------------------------------------------
+==9073== 
+==9073== Possible data race during write of size 4 at 0x110014 by thread #2
+==9073== Locks held: none
+==9073==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x48B732F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==9073==    by 0x490AD70: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==9073==    by 0x490AD70: __futex_abstimed_wait_common (futex-internal.c:87)
+==9073==    by 0x490AD70: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==9073==    by 0x490D7EC: __pthread_cond_wait_common (pthread_cond_wait.c:503)
+==9073==    by 0x490D7EC: pthread_cond_wait@@GLIBC_2.3.2 (pthread_cond_wait.c:627)
+==9073==    by 0x4854D21: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9073==    by 0x10CE5F: worker_thread (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x4854B7A: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9073==    by 0x490EAA3: start_thread (pthread_create.c:447)
+==9073==    by 0x499BA63: clone (clone.S:100)
+==9073== 
+==9073== This conflicts with a previous write of size 4 by thread #1
+==9073== Locks held: none
+==9073==    at 0x10D302: worker_signal_handler (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x48B732F: ??? (in /usr/lib/x86_64-linux-gnu/libc.so.6)
+==9073==    by 0x490AD70: __futex_abstimed_wait_common64 (futex-internal.c:57)
+==9073==    by 0x490AD70: __futex_abstimed_wait_common (futex-internal.c:87)
+==9073==    by 0x490AD70: __futex_abstimed_wait_cancelable64 (futex-internal.c:139)
+==9073==    by 0x4916FB7: __new_sem_wait_slow64.constprop.0 (sem_waitcommon.c:183)
+==9073==    by 0x48552D6: ??? (in /usr/libexec/valgrind/vgpreload_helgrind-amd64-linux.so)
+==9073==    by 0x10D454: worker_main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x10BB77: master_run (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==    by 0x10B73B: main (in /home/calix/Secretária/SO/SO-Multi-Threaded-Web-Server-with-IPC-and-Semaphores/server)
+==9073==  Address 0x110014 is 0 bytes inside data symbol "worker_running"
+==9073== 
+==9074== 
+==9074== Use --history-level=approx or =none to gain increased speed, at
+==9074== the cost of reduced accuracy of conflicting-access information
+==9074== For lists of detected and suppressed errors, rerun with: -s
+==9074== ERROR SUMMARY: 164 errors from 9 contexts (suppressed: 1390 from 143)
+==9073== 
+==9073== Use --history-level=approx or =none to gain increased speed, at
+==9073== the cost of reduced accuracy of conflicting-access information
+==9073== For lists of detected and suppressed errors, rerun with: -s
+==9073== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 879 from 68)
+==9072== 
+==9072== Use --history-level=approx or =none to gain increased speed, at
+==9072== the cost of reduced accuracy of conflicting-access information
+==9072== For lists of detected and suppressed errors, rerun with: -s
+==9072== ERROR SUMMARY: 56 errors from 9 contexts (suppressed: 1446 from 146)
+==9075== 
+==9075== Use --history-level=approx or =none to gain increased speed, at
+==9075== the cost of reduced accuracy of conflicting-access information
+==9075== For lists of detected and suppressed errors, rerun with: -s
+==9075== ERROR SUMMARY: 19 errors from 8 contexts (suppressed: 1363 from 136)
+==9070== 
+==9070== Use --history-level=approx or =none to gain increased speed, at
+==9070== the cost of reduced accuracy of conflicting-access information
+==9070== For lists of detected and suppressed errors, rerun with: -s
+==9070== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

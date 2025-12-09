@@ -111,24 +111,32 @@ void handle_client(thread_pool_t* pool, int client_fd) {
             snprintf(file_path, sizeof(file_path), "www%s", req.path);
         }
 
-        // 1. Verificar Cache
-        cache_entry_t* cached_entry = NULL;
+        // ---------------------------------------------------------
+        // 1. Verificar Cache (VERSÃO SEGURA CORRIGIDA)
+        // ---------------------------------------------------------
+        size_t cache_size = 0;
+        void* cache_data = NULL; // Ponteiro para a CÓPIA dos dados
+
         if (pool->cache) {
-            cached_entry = cache_get(pool->cache, file_path);
+            // cache_get agora devolve uma cópia segura e preenche o cache_size
+            cache_data = cache_get(pool->cache, file_path, &cache_size);
         }
 
-        if (cached_entry) {
+        if (cache_data) {
             // CACHE HIT
             printf("[Thread] CACHE HIT: %s\n", file_path);
             is_cache_hit = 1; 
-            bytes_sent = cached_entry->size;
+            bytes_sent = cache_size;
             status = 200;
             
             if (strcmp(req.method, "HEAD") == 0) {
                 send_http_response(client_fd, 200, "OK", get_mime_type(file_path), NULL, bytes_sent);
             } else {
-                send_http_response(client_fd, 200, "OK", get_mime_type(file_path), cached_entry->data, bytes_sent);
+                // Envia a cópia dos dados que recebemos
+                send_http_response(client_fd, 200, "OK", get_mime_type(file_path), cache_data, bytes_sent);
             }
+            
+            free(cache_data); // IMPORTANTE: Libertar a cópia aqui para não haver leaks!
         } 
         else {
             // CACHE MISS - Tentar ler do disco

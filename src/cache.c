@@ -66,9 +66,10 @@ void move_to_head(cache_t* cache, cache_entry_t* entry) {
     if (!cache->tail) cache->tail = entry;
 }
 
-cache_entry_t* cache_get(cache_t* cache, const char* key) {
-    // Usamos Write Lock porque vamos mexer na lista (mover para a frente)
-    // Se fosse só ler sem atualizar LRU, seria Read Lock.
+void* cache_get(cache_t* cache, const char* key, size_t* out_size) {
+    void* data_copy = NULL;
+    
+    // Usamos Write Lock para poder atualizar o LRU (move_to_head)
     pthread_rwlock_wrlock(&cache->lock);
 
     cache_entry_t* current = cache->head;
@@ -76,8 +77,17 @@ cache_entry_t* cache_get(cache_t* cache, const char* key) {
         if (strcmp(current->key, key) == 0) {
             // Encontrado! Mover para o início (LRU)
             move_to_head(cache, current);
+            
+            // --- CÓPIA SEGURA ---
+            data_copy = malloc(current->size);
+            if (data_copy) {
+                memcpy(data_copy, current->data, current->size);
+                if (out_size) *out_size = current->size;
+            }
+            // --------------------
+            
             pthread_rwlock_unlock(&cache->lock);
-            return current;
+            return data_copy;
         }
         current = current->next;
     }
