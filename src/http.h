@@ -1,4 +1,4 @@
-// http.h
+// src/http.h
 #ifndef HTTP_H
 #define HTTP_H
 
@@ -19,27 +19,20 @@ typedef struct {
 // HTTP Request Parser
 // =========================
 
-// Parsea a primeira linha da request HTTP.
-// Ex: "GET /index.html HTTP/1.1"
-// Retorna 0 se OK, -1 se inválido.
-
-
 int parse_http_request(const char* buffer, http_request_t* req);
 
 
 // =========================
 // HTTP Response Builder
 // =========================
-//
-// Constrói e envia a resposta HTTP completa.
-// Inclui headers + body (caso exista).
-//
 
+// Agora aceita o flag 'keep_alive'
 void send_http_response(int fd,
                         int status,
                         const char* status_msg,
                         const char* content_type,
                         const char* body,
-                        size_t body_len);
+                        size_t body_len,
+                        int keep_alive); // <--- NOVO PARÂMETRO
 
 #endif
