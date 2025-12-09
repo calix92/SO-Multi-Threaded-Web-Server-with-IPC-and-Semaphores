@@ -1,5 +1,5 @@
 #!/bin/bash
-# tests/test_memory.sh
+# tests/test_memory.sh - VERSÃO CORRIGIDA (Sem bloqueio no wait)
 # Testes de Memória com Valgrind (Memory Leaks)
 
 GREEN='\033[0;32m'
@@ -32,6 +32,7 @@ echo ""
 
 # Limpar recursos IPC antigos
 echo ">> A limpar recursos IPC antigos..."
+pkill -9 server 2>/dev/null
 rm -f /dev/shm/ws_* /dev/shm/sem.ws_* 2>/dev/null || true
 
 # ==========================================
@@ -68,8 +69,8 @@ valgrind --tool=memcheck \
 
 SERVER_PID=$!
 echo "Servidor iniciado com PID: $SERVER_PID"
-echo "Aguardando 8 segundos para o servidor arrancar..."
-sleep 8
+echo "Aguardando 10 segundos para o servidor arrancar (Valgrind é lento)..."
+sleep 10
 
 # Verificar se o servidor está a correr
 if ! kill -0 $SERVER_PID 2>/dev/null; then
@@ -80,47 +81,47 @@ fi
 
 # Gerar tráfego
 echo ">> A gerar tráfego para exercitar alocações de memória..."
+
 echo "   Fase 1: 50 pedidos HTML"
 for i in {1..50}; do
-    curl -s http://localhost:8080/index.html > /dev/null &
+    # Adicionado --max-time 5 para evitar bloqueios
+    curl -s --max-time 5 http://localhost:8080/index.html > /dev/null &
 done
-wait
-sleep 2
+sleep 5 # Substituído wait por sleep
 
 echo "   Fase 2: 50 pedidos CSS"
 for i in {1..50}; do
-    curl -s http://localhost:8080/style.css > /dev/null &
+    curl -s --max-time 5 http://localhost:8080/style.css > /dev/null &
 done
-wait
-sleep 2
+sleep 5 # Substituído wait por sleep
 
 echo "   Fase 3: 30 pedidos 404"
 for i in {1..30}; do
-    curl -s http://localhost:8080/nao_existe.html > /dev/null &
+    curl -s --max-time 5 http://localhost:8080/nao_existe.html > /dev/null &
 done
-wait
-sleep 2
+sleep 5 # Substituído wait por sleep
 
-echo "   Tráfego completo. Aguardando 5 segundos..."
+echo "   Tráfego completo. Aguardando processamento final..."
 sleep 5
 
 # Parar o servidor gracefully
 echo ">> A parar o servidor (SIGINT)..."
 kill -SIGINT $SERVER_PID
-sleep 5
+# Agora sim, esperamos ESPECIFICAMENTE pelo PID do servidor para garantir que o Valgrind guarda o log
+wait $SERVER_PID 2>/dev/null 
 
-# Forçar kill se ainda estiver vivo
-if kill -0 $SERVER_PID 2>/dev/null; then
-    echo "   Forçando encerramento (SIGKILL)..."
-    kill -9 $SERVER_PID
-fi
-wait $SERVER_PID 2>/dev/null
+echo "   Servidor parado."
 
 # Analisar resultados do Valgrind
 echo ""
 echo "=========================================="
 echo "   ANÁLISE DO VALGRIND (MEMORY)"
 echo "=========================================="
+
+if [ ! -f valgrind_memory.log ]; then
+    echo -e "${RED}ERRO: Log do Valgrind não encontrado.${NC}"
+    exit 1
+fi
 
 # Extrair sumário
 HEAP_SUMMARY=$(grep -A 10 "HEAP SUMMARY:" valgrind_memory.log | tail -10)
@@ -232,10 +233,11 @@ echo "A correr servidor normal e monitorizar uso de RAM..."
 echo ""
 
 # Limpar
+pkill -9 server 2>/dev/null
 rm -f /dev/shm/ws_* /dev/shm/sem.ws_* 2>/dev/null || true
 
 # Iniciar servidor normal
-./server &
+./server > /dev/null 2>&1 &
 SERVER_PID=$!
 sleep 3
 
@@ -246,15 +248,13 @@ echo "Memória inicial: ${MEM_START} KB"
 # Gerar carga
 echo ">> A enviar 500 pedidos..."
 for i in {1..500}; do
-    curl -s http://localhost:8080/index.html > /dev/null &
+    curl -s --max-time 2 http://localhost:8080/index.html > /dev/null &
     if [ $((i % 100)) -eq 0 ]; then
-        wait
-        sleep 1
+        sleep 1 # Pausa ligeira a cada 100
     fi
 done
-wait
-
-sleep 3
+# Espera segura
+sleep 5
 
 # Capturar uso de memória final
 MEM_END=$(ps -o rss= -p $SERVER_PID 2>/dev/null || echo 0)
@@ -324,19 +324,8 @@ echo ""
 
 if [ $PASSED_TESTS -ge 3 ]; then
     echo -e "${GREEN}✓✓✓ TESTES DE MEMÓRIA CONCLUÍDOS COM SUCESSO!${NC}"
-    echo ""
-    echo "O servidor não tem memory leaks críticos!"
-    echo ""
-    echo "Ficheiros gerados:"
-    echo "  - valgrind_memory.log (análise detalhada)"
-    echo "  - valgrind.supp (suppressions file)"
     exit 0
 else
     echo -e "${RED}✗✗✗ PROBLEMAS DE MEMÓRIA DETETADOS!${NC}"
-    echo ""
-    echo "Verifique:"
-    echo "  1. valgrind_memory.log para detalhes"
-    echo "  2. Funções que alocam memória (malloc/strdup)"
-    echo "  3. Cleanup no shutdown (SIGINT handler)"
     exit 1
 fi
