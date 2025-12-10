@@ -21,3 +21,5 @@ http://localhost:8080/ola.html
 
 A FAZER ANTES DE ENTREGA.
 ELEMINAR ISTO E OS PDF'S DO GUIÃO
+
+rever load

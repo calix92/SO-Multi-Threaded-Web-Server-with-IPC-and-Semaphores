@@ -9,13 +9,15 @@
 #include <netinet/in.h>
 #include <signal.h>
 #include <time.h>
+#include <string.h> 
+#include <errno.h>
+
 #include "master.h"
 #include "config.h"
 #include "shared_mem.h"
 #include "semaphores.h"
 #include "worker.h"
 #include "stats.h"
-#include <errno.h>
 
 volatile sig_atomic_t keep_running = 1;
 
@@ -55,6 +57,7 @@ int create_server_socket(int port) {
 }
 
 void master_run(server_config_t *config) {
+    // Configurar sinais
     struct sigaction sa;
     sa.sa_handler = signal_handler;
     sigemptyset(&sa.sa_mask);
@@ -64,56 +67,56 @@ void master_run(server_config_t *config) {
 
     printf("Master [PID %d]: A iniciar na porta %d...\n", getpid(), config->port);
 
-    // 1. Limpeza Preventiva
+    // 1. Limpeza Preventiva de recursos antigos
     shm_unlink("/webserver_shm"); 
     sem_unlink("/ws_empty"); sem_unlink("/ws_filled");
     sem_unlink("/ws_queue_mutex"); sem_unlink("/ws_stats_mutex"); sem_unlink("/ws_log_mutex");
 
-    // 2. IPC Setup
+    // 2. Setup da Memória Partilhada (Stats)
     shared_data_t* shm = create_shared_memory();
     if (!shm) { perror("Master: Falha SHM"); exit(1); }
-    // INICIALIZAR MEMÓRIA A ZEROS
+    
     memset(shm, 0, sizeof(shared_data_t)); 
     shm->stats.start_time = time(NULL);
 
+    // 3. Setup dos Semáforos
     semaphores_t sems;
     if (init_semaphores(&sems, config->max_queue_size) != 0) {
         perror("Master: Falha Semáforos");
         exit(1);
     }
 
-    // 3. Socket
+    // 4. Criação do Socket (O Master cria, os Workers herdam)
     int server_socket = create_server_socket(config->port);
     if (server_socket < 0) exit(1);
 
-    // 4. Fork Workers
+    // 5. Fork dos Workers
     pid_t pids[config->num_workers];
     for (int i = 0; i < config->num_workers; i++) {
         pids[i] = fork();
         if (pids[i] == 0) {
-            worker_main(i, server_socket); // Worker herda o listening socket
+            // Processo Filho (Worker)
+            worker_main(i, server_socket); 
             exit(0);
         }
     }
 
     printf("Master: Workers iniciados. Servidor Online.\n");
 
-    // 5. Loop de Monitorização e Estatísticas
-    // O Master está livre para fazer gestão, pois os Workers tratam das conexões.
+    // 6. Loop Principal do Master (Monitorização apenas)
     int countdown = 0;
     
     while (keep_running) {
-        sleep(1); // Espera 1 segundo
+        sleep(1); 
         
         countdown++;
-        // Verifica se passou o tempo definido (30s) para mostrar stats
         if (countdown >= config->timeout_seconds) {
             display_stats(shm, &sems);
             countdown = 0;
         }
     }
 
-    // Cleanup
+    // Cleanup (Graceful Shutdown)
     printf("\nMaster: A encerrar...\n");
     for (int i = 0; i < config->num_workers; i++) {
         if (pids[i] > 0) kill(pids[i], SIGTERM);

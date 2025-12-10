@@ -172,9 +172,9 @@ echo ""
 echo -e "${BLUE}TESTE 2: Deteção de Acessos Inválidos à Memória${NC}"
 echo ""
 
-INVALID_READS=$(grep -c "Invalid read" valgrind_memory.log 2>/dev/null || echo 0)
-INVALID_WRITES=$(grep -c "Invalid write" valgrind_memory.log 2>/dev/null || echo 0)
-USE_OF_UNINIT=$(grep -c "uninitialised" valgrind_memory.log 2>/dev/null || echo 0)
+INVALID_READS=$(grep -c "Invalid read" valgrind_memory.log 2>/dev/null)
+INVALID_WRITES=$(grep -c "Invalid write" valgrind_memory.log 2>/dev/null)
+USE_OF_UNINIT=$(grep -c "uninitialised" valgrind_memory.log 2>/dev/null)
 
 echo "Invalid reads: $INVALID_READS"
 echo "Invalid writes: $INVALID_WRITES"
