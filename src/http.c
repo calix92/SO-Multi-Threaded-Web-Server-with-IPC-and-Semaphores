@@ -4,30 +4,55 @@
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h> 
+#include <strings.h>
 
 // =========================
 // 6. HTTP Request Parser
 // =========================
 
 int parse_http_request(const char* buffer, http_request_t* req) {
+    // 1. Limpar o host por defeito
+    req->host[0] = '\0';
+
+    // 2. Parse da primeira linha (Método, Path, Versão)
     char* line_end = strstr(buffer, "\r\n");
     if (!line_end) return -1;
 
     char first_line[1024];
     size_t len = line_end - buffer;
     if (len >= sizeof(first_line)) len = sizeof(first_line) - 1;
-
     strncpy(first_line, buffer, len);
     first_line[len] = '\0';
 
-    if (sscanf(first_line, "%15s %511s %15s",
-               req->method,
-               req->path,
-               req->version) != 3)
-    {
+    if (sscanf(first_line, "%15s %511s %15s", req->method, req->path, req->version) != 3) {
         return -1;
     }
 
+    // 3. Loop para encontrar o cabeçalho "Host:"
+    char* current = line_end + 2; // Saltar o primeiro \r\n
+    while (current && *current) {
+        char* next_line = strstr(current, "\r\n");
+        if (!next_line) break;
+
+        // Verificar se a linha começa por "Host:"
+        if (strncasecmp(current, "Host:", 5) == 0) {
+            char* val_start = current + 5;
+            while (*val_start == ' ') val_start++; // Saltar espaços
+            
+            size_t val_len = next_line - val_start;
+            if (val_len >= sizeof(req->host)) val_len = sizeof(req->host) - 1;
+            
+            strncpy(req->host, val_start, val_len);
+            req->host[val_len] = '\0';
+            
+            // Remover porta se existir (ex: localhost:8080 -> localhost)
+            char* port_sep = strchr(req->host, ':');
+            if (port_sep) *port_sep = '\0';
+            
+            break; // Já temos o host, podemos sair
+        }
+        current = next_line + 2;
+    }
     return 0;
 }
 

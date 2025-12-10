@@ -40,6 +40,13 @@ int load_config(const char* filename, server_config_t* config) {
                 config->cache_size_mb = atoi(value);
             else if (strcmp(key, "TIMEOUT_SECONDS") == 0)
                 config->timeout_seconds = atoi(value);
+            else if (strncmp(key, "VHOST_", 6) == 0) {
+                if (config->vhost_count < 10) {
+                    strncpy(config->vhosts[config->vhost_count].hostname, key + 6, 127);
+                    strncpy(config->vhosts[config->vhost_count].root, value, 255);
+                    config->vhost_count++;
+                }
+            }
         }
     }
 

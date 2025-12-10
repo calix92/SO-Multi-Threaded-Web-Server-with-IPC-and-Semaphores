@@ -6,6 +6,7 @@
 #include "cache.h"
 #include "shared_mem.h" // Incluir para shared_data_t
 #include "semaphores.h" // Incluir para semaphores_t
+#include "config.h"
 
 // Estrutura para fila interna
 typedef struct task {
@@ -26,6 +27,8 @@ typedef struct {
     int shutdown;
 
     cache_t* cache;
+
+    server_config_t* config;
     
     // Permite acesso à SHM e aos Semáforos
     shared_data_t* shm; 
@@ -33,7 +36,7 @@ typedef struct {
 } thread_pool_t;
 
 // Assinatura da função de criação (TEM DE INCLUIR OS NOVOS PONTEIROS IPC)
-thread_pool_t* create_thread_pool(int num_threads, cache_t* cache, shared_data_t* shm, semaphores_t* sems);
+thread_pool_t* create_thread_pool(int num_threads, cache_t* cache, shared_data_t* shm, semaphores_t* sems, server_config_t* config);
 
 void destroy_thread_pool(thread_pool_t* pool);
 void thread_pool_dispatch(thread_pool_t* pool, int client_fd);

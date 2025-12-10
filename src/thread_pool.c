@@ -137,8 +137,22 @@ void handle_client(thread_pool_t* pool, int client_fd) {
             // --- SERVIR FICHEIRO ---
             else {
                 char file_path[1024];
-                if (strcmp(req.path, "/") == 0) snprintf(file_path, sizeof(file_path), "www/index.html");
-                else snprintf(file_path, sizeof(file_path), "www%s", req.path);
+                // --- LÓGICA VIRTUAL HOSTS ---
+                const char* base_root = pool->config->document_root; // Root padrão
+
+                // Procurar se o host corresponde a algum VHost configurado
+                for (int i = 0; i < pool->config->vhost_count; i++) {
+                    if (strcmp(req.host, pool->config->vhosts[i].hostname) == 0) {
+                        base_root = pool->config->vhosts[i].root;
+                        break;
+                    }
+                }
+
+                if (strcmp(req.path, "/") == 0) 
+                    snprintf(file_path, sizeof(file_path), "%s/index.html", base_root);
+                else 
+                    snprintf(file_path, sizeof(file_path), "%s%s", base_root, req.path);
+                // ---------------------------
 
                 // Cache
                 size_t c_size = 0;
@@ -220,13 +234,15 @@ void* worker_thread(void* arg) {
     return NULL;
 }
 
-thread_pool_t* create_thread_pool(int num_threads, cache_t* cache, shared_data_t* shm, semaphores_t* sems) {
+thread_pool_t* create_thread_pool(int num_threads, cache_t* cache, shared_data_t* shm, semaphores_t* sems, server_config_t* config) {
     thread_pool_t* pool = malloc(sizeof(thread_pool_t));
     if (!pool) return NULL;
     pool->threads = malloc(sizeof(pthread_t) * num_threads);
+    pool->config = config;
     pool->num_threads = num_threads;
     pool->head = NULL; pool->tail = NULL;
     pool->shutdown = 0; pool->cache = cache; pool->shm = shm; pool->sems = sems;
+    pool->threads = malloc(sizeof(pthread_t) * num_threads);
     pthread_mutex_init(&pool->mutex, NULL);
     pthread_cond_init(&pool->cond, NULL);
     for (int i = 0; i < num_threads; i++) 

@@ -21,7 +21,7 @@ void worker_signal_handler(int signum) {
     atomic_store(&worker_running, 0);
 }
 
-void worker_main(int worker_id, int server_socket) {
+void worker_main(int worker_id, int server_socket, server_config_t* config) {
     setbuf(stdout, NULL);
     
     // Configurar gestão de sinais
@@ -41,7 +41,7 @@ void worker_main(int worker_id, int server_socket) {
 
     // Inicializar Cache e Thread Pool (Aqui vivem os bónus!)
     cache_t* cache = cache_init(10); // 10MB cache
-    thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems);
+    thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems, config);
 
     // Loop Principal: Worker aceita conexões
     while (atomic_load(&worker_running)) {

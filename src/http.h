@@ -12,6 +12,7 @@ typedef struct {
     char method[16];
     char path[512];
     char version[16];
+    char host[128];
 } http_request_t;
 
 

@@ -96,7 +96,7 @@ void master_run(server_config_t *config) {
         pids[i] = fork();
         if (pids[i] == 0) {
             // Processo Filho (Worker)
-            worker_main(i, server_socket); 
+            worker_main(i, server_socket, config);
             exit(0);
         }
     }
