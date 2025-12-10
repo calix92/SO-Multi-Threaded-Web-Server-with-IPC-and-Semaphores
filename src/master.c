@@ -64,7 +64,7 @@ void master_run(server_config_t *config) {
 
     printf("Master [PID %d]: A iniciar na porta %d...\n", getpid(), config->port);
 
-    // 1. Limpeza Preventiva (Importante!)
+    // 1. Limpeza Preventiva
     shm_unlink("/webserver_shm"); 
     sem_unlink("/ws_empty"); sem_unlink("/ws_filled");
     sem_unlink("/ws_queue_mutex"); sem_unlink("/ws_stats_mutex"); sem_unlink("/ws_log_mutex");
@@ -108,7 +108,7 @@ void master_run(server_config_t *config) {
         countdown++;
         // Verifica se passou o tempo definido (30s) para mostrar stats
         if (countdown >= config->timeout_seconds) {
-            display_stats(shm, &sems); // <--- ESTA É A FUNÇÃO QUE FALTAVA
+            display_stats(shm, &sems);
             countdown = 0;
         }
     }

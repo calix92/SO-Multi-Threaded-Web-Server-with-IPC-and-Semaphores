@@ -15,7 +15,6 @@ void update_stats(shared_data_t* data, semaphores_t* sems,
     else if (status == 403) data->stats.status_403++;
     else if (status == 500) data->stats.status_500++;
     
-    // --- NOVOS DADOS ---
     data->stats.total_response_time_ms += response_time_ms;
     if (is_cache_hit) data->stats.cache_hits++;
     

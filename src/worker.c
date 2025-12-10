@@ -1,4 +1,4 @@
-// src/worker.c - VERSÃO CORRIGIDA
+// src/worker.c
 #define _POSIX_C_SOURCE 200809L
 #include "worker.h"
 #include "shared_mem.h"
@@ -13,13 +13,13 @@
 #include <errno.h>
 #include <string.h>
 
-// ✅ CORREÇÃO 1: Usar atomic para acesso thread-safe
+// Usar atomic para acesso thread-safe
 #include <stdatomic.h>
 static atomic_int worker_running = 1;
 
 void worker_signal_handler(int signum) {
     (void)signum;
-    // ✅ CORREÇÃO: Escrita atómica
+    // Escrita atómica
     atomic_store(&worker_running, 0);
 }
 
@@ -42,7 +42,7 @@ void worker_main(int worker_id, int server_socket) {
     cache_t* cache = cache_init(10);
     thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems);
 
-    // ✅ CORREÇÃO: Leitura atómica
+    // Leitura atómica
     while (atomic_load(&worker_running)) {
         struct sockaddr_in client_addr;
         socklen_t addr_len = sizeof(client_addr);

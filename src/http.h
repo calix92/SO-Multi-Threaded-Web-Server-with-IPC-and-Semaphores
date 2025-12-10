@@ -33,6 +33,6 @@ void send_http_response(int fd,
                         const char* content_type,
                         const char* body,
                         size_t body_len,
-                        int keep_alive); // <--- NOVO PARÂMETRO
+                        int keep_alive);
 
 #endif

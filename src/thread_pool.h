@@ -27,7 +27,7 @@ typedef struct {
 
     cache_t* cache;
     
-    // NOVOS MEMBROS IPC (Permite acesso à SHM e aos Semáforos)
+    // Permite acesso à SHM e aos Semáforos
     shared_data_t* shm; 
     semaphores_t* sems;
 } thread_pool_t;
