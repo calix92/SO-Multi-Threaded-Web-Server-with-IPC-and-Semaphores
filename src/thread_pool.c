@@ -76,30 +76,50 @@ void handle_client(thread_pool_t* pool, int client_fd) {
     shm->stats.active_connections++;
     sem_post(sems->stats_mutex);
 
-    // Loop para processar múltiplos pedidos na mesma conexão
+// Loop para processar múltiplos pedidos na mesma conexão
     while (1) {
-        char buffer[8192]; // Buffer maior
+        char buffer[8192];
         
-        // Iniciar cronómetro do pedido
         struct timeval start, end;
         gettimeofday(&start, NULL);
 
         ssize_t bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-        
-        if (bytes_read <= 0) {
-            // Se for timeout (cliente inativo), apenas sai silenciosamente
-            // Se for erro real ou fecho pelo cliente, sai também
-            break;
-        }
+        if (bytes_read <= 0) break; // Cliente fechou ou timeout
         
         buffer[bytes_read] = '\0';
-        http_request_t req;
-        int keep_alive = 1; // Assumimos keep-alive por defeito no loop
         
+        // --- CORREÇÃO CRÍTICA 1: LIMPAR A MEMÓRIA ---
+        http_request_t req;
+        memset(&req, 0, sizeof(req)); 
+        // --------------------------------------------
+
         int status = 500;
         size_t bytes_sent = 0;
         char req_path[512] = "";
         int is_cache_hit = 0;
+
+        if (parse_http_request(buffer, &req) != 0) {
+            send_http_response(client_fd, 400, "Bad Request", "text/html", NULL, 0, 0);
+            break; // Sai do loop imediatamente
+        }
+        
+        // --- CORREÇÃO CRÍTICA 2: KEEP-ALIVE INTELIGENTE ---
+        // Assume FECHAR por defeito (para o 'ab' não bloquear)
+        int keep_alive = 0; 
+        
+        // Só mantém aberto se for explicitamente HTTP/1.1
+        if (strcasecmp(req.version, "HTTP/1.1") == 0) {
+            keep_alive = 1;
+        }
+        
+        // Se o cliente pediu para fechar, respeitamos sempre
+        if (req.connection_close) {
+            keep_alive = 0;
+        }
+        // --------------------------------------------------
+
+        strcpy(req_path, req.path);
+        // ... (resto do código continua igual: /stats, ficheiros, etc.)
 
         if (parse_http_request(buffer, &req) != 0) {
             status = 400;
@@ -165,8 +185,31 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                     free(c_data);
                 } else {
                     FILE* f = fopen(file_path, "rb");
-                    if (f) {
-                        fseek(f, 0, SEEK_END); long fsize = ftell(f); fseek(f, 0, SEEK_SET);
+                if (f) {
+                    fseek(f, 0, SEEK_END);
+                    long fsize = ftell(f);
+                    
+                    // Lógica de Range
+                    if (req.range_start != -1 && req.range_start < fsize) {
+                        // É um pedido parcial!
+                        long start = req.range_start;
+                        long end = (req.range_end == -1 || req.range_end >= fsize) ? fsize - 1 : req.range_end;
+                        size_t chunk_size = end - start + 1;
+
+                        char* b = malloc(chunk_size);
+                        if (b) {
+                            fseek(f, start, SEEK_SET); // Saltar para o início pedido
+                            fread(b, 1, chunk_size, f);
+                            
+                            // Enviar 206 Partial Content
+                            send_http_partial_response(client_fd, get_mime_type(file_path), b, chunk_size, start, end, fsize, 1);
+                            free(b);
+                        }
+                        bytes_sent = chunk_size; status = 206;
+                    } 
+                    else {
+                        // Pedido Normal (200 OK) - Código antigo
+                        fseek(f, 0, SEEK_SET);
                         if (strcmp(req.method, "HEAD") == 0) {
                             send_http_response(client_fd, 200, "OK", get_mime_type(file_path), NULL, fsize, 1);
                         } else {
@@ -174,12 +217,14 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                             if (b) {
                                 fread(b, 1, fsize, f);
                                 send_http_response(client_fd, 200, "OK", get_mime_type(file_path), b, fsize, 1);
+                                // (Opcional) Guardar em cache aqui
                                 if (pool->cache && fsize < 1048576) cache_put(pool->cache, file_path, b, fsize);
                                 free(b);
                             }
                         }
                         bytes_sent = fsize; status = 200;
-                        fclose(f);
+                    }
+                    fclose(f);
                     } else {
                         status = (errno == EACCES) ? 403 : 404;
                         send_error_page_file(client_fd, status, (status==403?"Forbidden":"Not Found"), 

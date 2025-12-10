@@ -13,6 +13,9 @@ typedef struct {
     char path[512];
     char version[16];
     char host[128];
+    long range_start;
+    long range_end;
+    int connection_close;
 } http_request_t;
 
 
@@ -35,5 +38,8 @@ void send_http_response(int fd,
                         const char* body,
                         size_t body_len,
                         int keep_alive);
+
+void send_http_partial_response(int fd, const char* content_type, const char* body, 
+                                size_t chunk_size, long start, long end, long total_size, int keep_alive);
 
 #endif

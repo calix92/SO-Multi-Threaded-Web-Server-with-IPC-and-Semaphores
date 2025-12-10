@@ -59,6 +59,33 @@ else
     echo -e "${RED}[ FAIL ]${NC} (Header não encontrado ou é 'close')"
 fi
 
+# ---------------------------------------------------------
+# TESTE 4: Range Requests (HTTP 206)
+# ---------------------------------------------------------
+echo -n "5. Testing Range Requests (bytes=0-10)... "
+
+# Faz o pedido e guarda o output e os headers
+# -D - : faz dump dos headers para stdout
+# -o ... : guarda o corpo num ficheiro
+curl -s -D /tmp/headers_range.txt -o /tmp/body_range.txt -H "Range: bytes=0-10" "$SERVER_URL/index.html"
+
+# Verificar se o código HTTP é 206 (Partial Content)
+if grep -q "HTTP/1.1 206" /tmp/headers_range.txt; then
+    # Verificar se o Content-Length é 11 (bytes 0 a 10 = 11 bytes)
+    if grep -q "Content-Length: 11" /tmp/headers_range.txt; then
+        echo -e "${GREEN}[ PASS ]${NC}"
+    else
+        echo -e "${RED}[ FAIL ]${NC} (Status 206 OK, mas Content-Length incorreto)"
+        cat /tmp/headers_range.txt
+    fi
+else
+    echo -e "${RED}[ FAIL ]${NC} (Esperado 206, recebido outro status)"
+    head -n 1 /tmp/headers_range.txt
+fi
+
+# Limpeza
+rm -f /tmp/headers_range.txt /tmp/body_range.txt
+
 echo ""
 echo "Teste concluído."
 rm -f /tmp/stats_output.html
