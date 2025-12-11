@@ -45,7 +45,7 @@ int handle_cgi_request(int client_fd, const char* script_path) {
         close(pipefd[1]); // Fecha escrita
 
         // Ler o output do script
-        char* output_buffer = malloc(65536); // 64KB Max
+        char* output_buffer = malloc(65536);
         if (!output_buffer) {
             close(pipefd[0]);
             waitpid(pid, NULL, 0);
@@ -61,7 +61,7 @@ int handle_cgi_request(int client_fd, const char* script_path) {
 
         close(pipefd[0]);
         
-        // Esperar que o filho morra (evitar Zombies!)
+        // Esperar que o filho morra para evitar Zombies!
         int status;
         waitpid(pid, &status, 0);
 

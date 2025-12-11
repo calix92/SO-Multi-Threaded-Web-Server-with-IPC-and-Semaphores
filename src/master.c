@@ -103,7 +103,7 @@ void master_run(server_config_t *config) {
 
     printf("Master: Workers iniciados. Servidor Online.\n");
 
-    // 6. Loop Principal do Master (Monitorização apenas)
+    // 6. Monitorização do Loop Principal do Master
     int countdown = 0;
     
     while (keep_running) {

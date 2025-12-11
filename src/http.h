@@ -2,7 +2,7 @@
 #ifndef HTTP_H
 #define HTTP_H
 
-#include <stddef.h>   // size_t
+#include <stddef.h>
 
 // =========================
 // HTTP Request Structure

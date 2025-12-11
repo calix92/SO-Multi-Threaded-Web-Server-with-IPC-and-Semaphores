@@ -75,6 +75,8 @@ else
 fi
 echo ""
 
+
+# NOTA: é possível que no terminal não comece este teste, caso isso aconteça é erro do server, recomendamos limpar logs, supp e resultados de testes anteriores.
 # ==========================================
 # FASE 3: Testes de Carga
 # ==========================================

@@ -5,12 +5,12 @@
 #include "cache.h"
 #include "stats.h"
 #include "logger.h"
-#include "cgi.h"        // Bónus CGI
+#include "cgi.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <strings.h>    // Para strcasecmp
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -90,7 +90,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
         
         buffer[bytes_read] = '\0';
         
-        // --- CORREÇÃO CRÍTICA 1: LIMPAR A MEMÓRIA ---
+        // LIMPAR A MEMÓRIA ---------------------------
         http_request_t req;
         memset(&req, 0, sizeof(req)); 
         // --------------------------------------------
@@ -105,7 +105,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
             break; // Sai do loop imediatamente
         }
         
-        // --- CORREÇÃO CRÍTICA 2: KEEP-ALIVE INTELIGENTE ---
+        // KEEP-ALIVE INTELIGENTE -----------------------------
         // Assume FECHAR por defeito (para o 'ab' não bloquear)
         int keep_alive = 0; 
         
@@ -122,7 +122,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
 
         strcpy(req_path, req.path);
 
-        // --- DASHBOARD ---
+        // DASHBOARD ------------------------------------------------------------------------
         if (strcmp(req.path, "/stats") == 0) {
             sem_wait(sems->stats_mutex);
             time_t now = time(NULL);
@@ -148,11 +148,11 @@ void handle_client(thread_pool_t* pool, int client_fd) {
             send_http_response(client_fd, 200, "OK", "text/html", body, body_len, 1);
             status = 200; bytes_sent = body_len;
         }
-        // --- SERVIR FICHEIRO / CGI ---
+        // SERVIR FICHEIRO / CGI ---------------------------------------------------
         else {
             char file_path[1024];
             
-            // --- LÓGICA VIRTUAL HOSTS ---
+            // LÓGICA VIRTUAL HOSTS ------------------------------------------------
             const char* base_root = pool->config->document_root; // Root padrão
 
             // Procurar se o host corresponde a algum VHost configurado
@@ -169,7 +169,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                 snprintf(file_path, sizeof(file_path), "%s%s", base_root, req.path);
             // ---------------------------
 
-            // --- BÓNUS CGI: Detetar scripts Python ---
+            // BÓNUS CGI: Detetar scripts Python ----------------------------------
             char* ext = strrchr(file_path, '.');
             if (ext && strcmp(ext, ".py") == 0) {
                 // É um script Python! Executar CGI
@@ -235,7 +235,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                             if (b) {
                                 fread(b, 1, fsize, f);
                                 send_http_response(client_fd, 200, "OK", get_mime_type(file_path), b, fsize, 1);
-                                // (Opcional) Guardar em cache aqui (apenas se for pedido normal)
+                                // Guardar em cache aqui (apenas se for pedido normal)
                                 if (pool->cache && fsize < 1048576) cache_put(pool->cache, file_path, b, fsize);
                                 free(b);
                             }
@@ -300,7 +300,7 @@ thread_pool_t* create_thread_pool(int num_threads, cache_t* cache, shared_data_t
     thread_pool_t* pool = malloc(sizeof(thread_pool_t));
     if (!pool) return NULL;
     
-    // --- CORREÇÃO DO LEAK: Alocar apenas uma vez ---
+    // Alocar apenas uma vez (evitar leak)
     pool->threads = malloc(sizeof(pthread_t) * num_threads);
     // -----------------------------------------------
 
@@ -345,7 +345,7 @@ void destroy_thread_pool(thread_pool_t* pool) {
         pthread_join(pool->threads[i], NULL);
     }
 
-    // 3. Libertar memória das threads (CORREÇÃO DO LEAK)
+    // 3. Libertar memória das threads (evitar leak)
     if (pool->threads) free(pool->threads);
 
     // 4. Destruir sincronização e a pool

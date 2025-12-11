@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Master runs in parent; workers fork inside master_init()
+    // Master executa no pai; workers fazem fork dentro de master_init()
     master_run(&config);
 
     return 0;

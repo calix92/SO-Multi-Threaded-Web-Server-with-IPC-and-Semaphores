@@ -1,7 +1,7 @@
 // src/stats.c
 #include "stats.h"
 #include <stdio.h>
-#include <time.h> // Necessário para time()
+#include <time.h>
 
 void update_stats(shared_data_t* data, semaphores_t* sems, 
                   int status, size_t bytes, long response_time_ms, int is_cache_hit) {

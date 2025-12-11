@@ -39,7 +39,7 @@ void worker_main(int worker_id, int server_socket, server_config_t* config) {
     semaphores_t sems;
     if (init_semaphores(&sems, 0) < 0) exit(1);
 
-    // Inicializar Cache e Thread Pool (Aqui vivem os bónus!)
+    // Inicializar Cache e Thread Pool
     cache_t* cache = cache_init(10); // 10MB cache
     thread_pool_t* pool = create_thread_pool(10, cache, shm, &sems, config);
 

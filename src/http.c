@@ -114,7 +114,7 @@ void send_http_response(int fd,
         conn_header
     );
 
-    // Enviar header (verificar erros seria ideal, mas simplificamos)
+    // Enviar header (podiamos verificar erros, mas acreditamos que não há problema se deixarmos esta versão simplificada)
     if (send(fd, header, header_len, 0) < 0) return;
 
     // Enviar corpo
@@ -135,7 +135,7 @@ void send_http_partial_response(int fd, const char* content_type, const char* bo
         "HTTP/1.1 206 Partial Content\r\n"
         "Content-Type: %s\r\n"
         "Content-Length: %zu\r\n"
-        "Content-Range: bytes %ld-%ld/%ld\r\n" // O segredo está aqui
+        "Content-Range: bytes %ld-%ld/%ld\r\n"
         "Server: ConcurrentHTTP/1.0\r\n"
         "Connection: %s\r\n"
         "\r\n",
