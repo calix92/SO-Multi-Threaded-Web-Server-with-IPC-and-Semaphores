@@ -14,6 +14,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <time.h>
+#include "cgi.h"
 
 #define KEEPALIVE_TIMEOUT 5 // segundos
 
@@ -173,6 +174,27 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                 else 
                     snprintf(file_path, sizeof(file_path), "%s%s", base_root, req.path);
                 // ---------------------------
+
+                // --- BÓNUS CGI: Detetar scripts Python ---
+                char* ext = strrchr(file_path, '.');
+                if (ext && strcmp(ext, ".py") == 0) {
+                    // É um script Python! Executar CGI
+                    int cgi_status = handle_cgi_request(client_fd, file_path);
+                    
+                    if (cgi_status == 500) {
+                        send_error_page_file(client_fd, 500, "Internal Server Error", 
+                                           "www/errors/500.html", shm, sems, req_path);
+                    }
+                    
+                    // Registar stats e sair deste pedido
+                    gettimeofday(&end, NULL);
+                    long dur = ((end.tv_sec - start.tv_sec)*1000000 + end.tv_usec - start.tv_usec) / 1000;
+                    log_request(sems->log_mutex, "127.0.0.1", req.method, req_path, cgi_status, 0);
+                    update_stats(shm, sems, cgi_status, 0, dur, 0);
+                    
+                    if (!keep_alive) break;
+                    continue; // Salta para o próximo pedido do loop
+                }
 
                 // Cache
                 size_t c_size = 0;
