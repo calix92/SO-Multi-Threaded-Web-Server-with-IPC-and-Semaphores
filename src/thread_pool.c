@@ -1,20 +1,22 @@
 // src/thread_pool.c
+#define _POSIX_C_SOURCE 200809L
 #include "thread_pool.h"
 #include "http.h"
 #include "cache.h"
 #include "stats.h"
 #include "logger.h"
+#include "cgi.h"        // Bónus CGI
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+#include <strings.h>    // Para strcasecmp
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <errno.h>
 #include <time.h>
-#include "cgi.h"
 
 #define KEEPALIVE_TIMEOUT 5 // segundos
 
@@ -31,7 +33,7 @@ const char* get_mime_type(const char* filename) {
     return "text/plain";
 }
 
-// Helper atualizado com o parâmetro keep_alive=0 (erro fecha conexão por segurança)
+// Helper para páginas de erro
 void send_error_page_file(int fd, int status, const char* status_msg, const char* file_path, 
                           shared_data_t* shm, semaphores_t* sems, const char* req_path) {
     (void)shm; (void)sems; (void)req_path; // unused warning fix
@@ -42,7 +44,6 @@ void send_error_page_file(int fd, int status, const char* status_msg, const char
     if (!file) {
         const char* fallback_body = (status == 404) ? "404 Not Found" : "500 Internal Error";
         bytes_sent = strlen(fallback_body);
-        // Erros forçam fecho de conexão (keep_alive = 0)
         send_http_response(fd, status, status_msg, "text/plain", fallback_body, bytes_sent, 0);
         return; 
     }
@@ -77,7 +78,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
     shm->stats.active_connections++;
     sem_post(sems->stats_mutex);
 
-// Loop para processar múltiplos pedidos na mesma conexão
+    // Loop para processar múltiplos pedidos na mesma conexão
     while (1) {
         char buffer[8192];
         
@@ -120,98 +121,93 @@ void handle_client(thread_pool_t* pool, int client_fd) {
         // --------------------------------------------------
 
         strcpy(req_path, req.path);
-        // ... (resto do código continua igual: /stats, ficheiros, etc.)
 
-        if (parse_http_request(buffer, &req) != 0) {
-            status = 400;
-            send_http_response(client_fd, 400, "Bad Request", "text/html", NULL, 0, 0);
-            keep_alive = 0; // Forçar saída
-        } else {
-            strcpy(req_path, req.path);
+        // --- DASHBOARD ---
+        if (strcmp(req.path, "/stats") == 0) {
+            sem_wait(sems->stats_mutex);
+            time_t now = time(NULL);
+            long uptime = now - shm->stats.start_time;
+            double avg_time = (shm->stats.total_requests > 0) ? 
+                (double)shm->stats.total_response_time_ms / shm->stats.total_requests : 0;
 
-            // --- DASHBOARD ---
-            if (strcmp(req.path, "/stats") == 0) {
-                sem_wait(sems->stats_mutex);
-                time_t now = time(NULL);
-                long uptime = now - shm->stats.start_time;
-                double avg_time = (shm->stats.total_requests > 0) ? 
-                    (double)shm->stats.total_response_time_ms / shm->stats.total_requests : 0;
+            char body[8192];
+            int body_len = snprintf(body, sizeof(body),
+                "<!DOCTYPE html><html><head><meta http-equiv='refresh' content='3'><title>Stats</title>"
+                "<style>body{font-family:sans-serif;padding:20px;background:#f4f4f9} .card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}</style>"
+                "</head><body><div class='card'><h1>Server Dashboard</h1>"
+                "<p>Uptime: <b>%lds</b> | Active Conn: <b>%d</b></p>"
+                "<p>Total Req: <b>%ld</b> | Avg Time: <b>%.2fms</b></p>"
+                "<p>Bytes: <b>%ld</b> | Hits: <b>%ld</b></p>"
+                "<p>200: %ld | 404: %ld | 500: %ld</p></div></body></html>",
+                uptime, shm->stats.active_connections, shm->stats.total_requests, avg_time,
+                shm->stats.bytes_transferred, shm->stats.cache_hits,
+                shm->stats.status_200, shm->stats.status_404, shm->stats.status_500
+            );
+            sem_post(sems->stats_mutex);
+            
+            send_http_response(client_fd, 200, "OK", "text/html", body, body_len, 1);
+            status = 200; bytes_sent = body_len;
+        }
+        // --- SERVIR FICHEIRO / CGI ---
+        else {
+            char file_path[1024];
+            
+            // --- LÓGICA VIRTUAL HOSTS ---
+            const char* base_root = pool->config->document_root; // Root padrão
 
-                char body[8192];
-                int body_len = snprintf(body, sizeof(body),
-                    "<!DOCTYPE html><html><head><meta http-equiv='refresh' content='3'><title>Stats</title>"
-                    "<style>body{font-family:sans-serif;padding:20px;background:#f4f4f9} .card{background:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,0.1)}</style>"
-                    "</head><body><div class='card'><h1>Server Dashboard</h1>"
-                    "<p>Uptime: <b>%lds</b> | Active Conn: <b>%d</b></p>"
-                    "<p>Total Req: <b>%ld</b> | Avg Time: <b>%.2fms</b></p>"
-                    "<p>Bytes: <b>%ld</b> | Hits: <b>%ld</b></p>"
-                    "<p>200: %ld | 404: %ld | 500: %ld</p></div></body></html>",
-                    uptime, shm->stats.active_connections, shm->stats.total_requests, avg_time,
-                    shm->stats.bytes_transferred, shm->stats.cache_hits,
-                    shm->stats.status_200, shm->stats.status_404, shm->stats.status_500
-                );
-                sem_post(sems->stats_mutex);
-                
-                send_http_response(client_fd, 200, "OK", "text/html", body, body_len, 1);
-                status = 200; bytes_sent = body_len;
+            // Procurar se o host corresponde a algum VHost configurado
+            for (int i = 0; i < pool->config->vhost_count; i++) {
+                if (strcmp(req.host, pool->config->vhosts[i].hostname) == 0) {
+                    base_root = pool->config->vhosts[i].root;
+                    break;
+                }
             }
-            // --- SERVIR FICHEIRO ---
-            else {
-                char file_path[1024];
-                // --- LÓGICA VIRTUAL HOSTS ---
-                const char* base_root = pool->config->document_root; // Root padrão
 
-                // Procurar se o host corresponde a algum VHost configurado
-                for (int i = 0; i < pool->config->vhost_count; i++) {
-                    if (strcmp(req.host, pool->config->vhosts[i].hostname) == 0) {
-                        base_root = pool->config->vhosts[i].root;
-                        break;
-                    }
+            if (strcmp(req.path, "/") == 0) 
+                snprintf(file_path, sizeof(file_path), "%s/index.html", base_root);
+            else 
+                snprintf(file_path, sizeof(file_path), "%s%s", base_root, req.path);
+            // ---------------------------
+
+            // --- BÓNUS CGI: Detetar scripts Python ---
+            char* ext = strrchr(file_path, '.');
+            if (ext && strcmp(ext, ".py") == 0) {
+                // É um script Python! Executar CGI
+                int cgi_status = handle_cgi_request(client_fd, file_path);
+                
+                if (cgi_status == 500) {
+                    send_error_page_file(client_fd, 500, "Internal Server Error", 
+                                       "www/errors/500.html", shm, sems, req_path);
                 }
+                
+                // Registar stats e sair deste pedido
+                gettimeofday(&end, NULL);
+                long dur = ((end.tv_sec - start.tv_sec)*1000000 + end.tv_usec - start.tv_usec) / 1000;
+                log_request(sems->log_mutex, "127.0.0.1", req.method, req_path, cgi_status, 0);
+                update_stats(shm, sems, cgi_status, 0, dur, 0);
+                
+                if (!keep_alive) break;
+                continue; // Salta para o próximo pedido do loop
+            }
+            // -----------------------------------------
 
-                if (strcmp(req.path, "/") == 0) 
-                    snprintf(file_path, sizeof(file_path), "%s/index.html", base_root);
-                else 
-                    snprintf(file_path, sizeof(file_path), "%s%s", base_root, req.path);
-                // ---------------------------
+            // Cache
+            size_t c_size = 0;
+            // Só usa a cache se NÃO for um pedido de Range (req.range_start == -1)
+            void* c_data = (pool->cache && req.range_start == -1) ? cache_get(pool->cache, file_path, &c_size) : NULL;
 
-                // --- BÓNUS CGI: Detetar scripts Python ---
-                char* ext = strrchr(file_path, '.');
-                if (ext && strcmp(ext, ".py") == 0) {
-                    // É um script Python! Executar CGI
-                    int cgi_status = handle_cgi_request(client_fd, file_path);
-                    
-                    if (cgi_status == 500) {
-                        send_error_page_file(client_fd, 500, "Internal Server Error", 
-                                           "www/errors/500.html", shm, sems, req_path);
-                    }
-                    
-                    // Registar stats e sair deste pedido
-                    gettimeofday(&end, NULL);
-                    long dur = ((end.tv_sec - start.tv_sec)*1000000 + end.tv_usec - start.tv_usec) / 1000;
-                    log_request(sems->log_mutex, "127.0.0.1", req.method, req_path, cgi_status, 0);
-                    update_stats(shm, sems, cgi_status, 0, dur, 0);
-                    
-                    if (!keep_alive) break;
-                    continue; // Salta para o próximo pedido do loop
-                }
-
-                // Cache
-                size_t c_size = 0;
-                void* c_data = pool->cache ? cache_get(pool->cache, file_path, &c_size) : NULL;
-
-                if (c_data) {
-                    is_cache_hit = 1; bytes_sent = c_size; status = 200;
-                    send_http_response(client_fd, 200, "OK", get_mime_type(file_path), 
-                                     (strcmp(req.method, "HEAD")==0 ? NULL : c_data), bytes_sent, 1);
-                    free(c_data);
-                } else {
-                    FILE* f = fopen(file_path, "rb");
+            if (c_data) {
+                is_cache_hit = 1; bytes_sent = c_size; status = 200;
+                send_http_response(client_fd, 200, "OK", get_mime_type(file_path), 
+                                 (strcmp(req.method, "HEAD")==0 ? NULL : c_data), bytes_sent, 1);
+                free(c_data);
+            } else {
+                FILE* f = fopen(file_path, "rb");
                 if (f) {
                     fseek(f, 0, SEEK_END);
                     long fsize = ftell(f);
                     
-                    // Lógica de Range
+                    // --- BÓNUS: Lógica de Range Requests ---
                     if (req.range_start != -1 && req.range_start < fsize) {
                         // É um pedido parcial!
                         long start = req.range_start;
@@ -230,7 +226,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                         bytes_sent = chunk_size; status = 206;
                     } 
                     else {
-                        // Pedido Normal (200 OK) - Código antigo
+                        // Pedido Normal (200 OK)
                         fseek(f, 0, SEEK_SET);
                         if (strcmp(req.method, "HEAD") == 0) {
                             send_http_response(client_fd, 200, "OK", get_mime_type(file_path), NULL, fsize, 1);
@@ -239,7 +235,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                             if (b) {
                                 fread(b, 1, fsize, f);
                                 send_http_response(client_fd, 200, "OK", get_mime_type(file_path), b, fsize, 1);
-                                // (Opcional) Guardar em cache aqui
+                                // (Opcional) Guardar em cache aqui (apenas se for pedido normal)
                                 if (pool->cache && fsize < 1048576) cache_put(pool->cache, file_path, b, fsize);
                                 free(b);
                             }
@@ -247,13 +243,12 @@ void handle_client(thread_pool_t* pool, int client_fd) {
                         bytes_sent = fsize; status = 200;
                     }
                     fclose(f);
-                    } else {
-                        status = (errno == EACCES) ? 403 : 404;
-                        send_error_page_file(client_fd, status, (status==403?"Forbidden":"Not Found"), 
-                                           (status==403?"www/errors/403.html":"www/errors/404.html"), 
-                                           shm, sems, req_path);
-                        keep_alive = 0; // Erros fecham conexão
-                    }
+                } else {
+                    status = (errno == EACCES) ? 403 : 404;
+                    send_error_page_file(client_fd, status, (status==403?"Forbidden":"Not Found"), 
+                                       (status==403?"www/errors/403.html":"www/errors/404.html"), 
+                                       shm, sems, req_path);
+                    keep_alive = 0; // Erros fecham conexão
                 }
             }
         }
@@ -304,12 +299,20 @@ void* worker_thread(void* arg) {
 thread_pool_t* create_thread_pool(int num_threads, cache_t* cache, shared_data_t* shm, semaphores_t* sems, server_config_t* config) {
     thread_pool_t* pool = malloc(sizeof(thread_pool_t));
     if (!pool) return NULL;
+    
+    // --- CORREÇÃO DO LEAK: Alocar apenas uma vez ---
     pool->threads = malloc(sizeof(pthread_t) * num_threads);
+    // -----------------------------------------------
+
     pool->config = config;
     pool->num_threads = num_threads;
-    pool->head = NULL; pool->tail = NULL;
-    pool->shutdown = 0; pool->cache = cache; pool->shm = shm; pool->sems = sems;
-    pool->threads = malloc(sizeof(pthread_t) * num_threads);
+    pool->head = NULL; 
+    pool->tail = NULL;
+    pool->shutdown = 0; 
+    pool->cache = cache; 
+    pool->shm = shm; 
+    pool->sems = sems;
+
     pthread_mutex_init(&pool->mutex, NULL);
     pthread_cond_init(&pool->cond, NULL);
     for (int i = 0; i < num_threads; i++) 
@@ -330,13 +333,32 @@ void thread_pool_dispatch(thread_pool_t* pool, int client_fd) {
 
 void destroy_thread_pool(thread_pool_t* pool) {
     if (!pool) return;
+
+    // 1. Mandar as threads pararem
     pthread_mutex_lock(&pool->mutex);
     pool->shutdown = 1;
     pthread_cond_broadcast(&pool->cond);
     pthread_mutex_unlock(&pool->mutex);
-    for (int i = 0; i < pool->num_threads; i++) pthread_join(pool->threads[i], NULL);
-    free(pool->threads);
+
+    // 2. Esperar que elas terminem
+    for (int i = 0; i < pool->num_threads; i++) {
+        pthread_join(pool->threads[i], NULL);
+    }
+
+    // 3. Libertar memória das threads (CORREÇÃO DO LEAK)
+    if (pool->threads) free(pool->threads);
+
+    // 4. Destruir sincronização e a pool
     pthread_mutex_destroy(&pool->mutex);
     pthread_cond_destroy(&pool->cond);
+    
+    // Libertar tarefas pendentes se houver
+    task_t* cur = pool->head;
+    while (cur) {
+        task_t* next = cur->next;
+        free(cur);
+        cur = next;
+    }
+
     free(pool);
 }
