@@ -23,3 +23,13 @@ A FAZER ANTES DE ENTREGA.
 ELEMINAR ISTO E OS PDF'S DO GUIÃO
 
 rever load
+
+
+
+No Código (src/shared_mem.h):
+
+    Ainda tens lá isto:
+    C
+
+typedef struct {
+    int sockets[MAX_QUEUE_SIZE];
