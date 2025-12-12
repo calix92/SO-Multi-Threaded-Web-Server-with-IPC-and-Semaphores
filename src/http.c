@@ -114,7 +114,7 @@ void send_http_response(int fd,
         conn_header
     );
 
-    // Enviar header (podiamos verificar erros, mas acreditamos que não há problema se deixarmos esta versão simplificada)
+    // Enviar header
     if (send(fd, header, header_len, 0) < 0) return;
 
     // Enviar corpo

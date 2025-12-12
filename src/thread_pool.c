@@ -90,7 +90,7 @@ void handle_client(thread_pool_t* pool, int client_fd) {
         
         buffer[bytes_read] = '\0';
         
-        // LIMPAR A MEMÓRIA ---------------------------
+        // Reset request structure
         http_request_t req;
         memset(&req, 0, sizeof(req)); 
         // --------------------------------------------

@@ -16,7 +16,7 @@ typedef struct cache_entry {
 typedef struct {
     cache_entry_t* head;
     cache_entry_t* tail;
-    pthread_rwlock_t lock; // (erro normal, não afeta o funcionamento)
+    pthread_rwlock_t lock;
     size_t max_size;
     size_t current_size;
 } cache_t;
